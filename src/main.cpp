@@ -224,4 +224,3 @@ void FillingLEDsSolidColors(const char *hsvCStr){
   CHSV hsv((hsvHex >> 16) & 0xFF, (hsvHex >> 8) & 0xFF, hsvHex & 0xFF);
   fill_solid(leds, NUM_LEDS, hsv);
 }
-
