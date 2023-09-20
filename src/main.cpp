@@ -4,6 +4,8 @@
 
 #include <Arduino.h>
 #include <FastLED.h>
+#include <EEManager.h>
+
 #include "settings.hpp"
 #include "mDNS_Server.hpp"
 #include "DeviceParameters.hpp"
@@ -12,6 +14,13 @@
 
 
 #define DEBUG_SERIAL
+
+// основные параметры устройства
+APICLG::DeviceParameters deviceParameters;
+
+
+// объект управляющий хранением данных устройтсва в энергонезависимой памяти
+EEManager memoryDeviceParam(deviceParameters);
 
 CRGB leds[NUM_LEDS];
 
@@ -31,10 +40,33 @@ void Error(uint8_t code);
 
 void setup()
 {
+// вывод данных через UART, используется для отладки
 #ifdef DEBUG_SERIAL
   Serial.begin(115200); // Start the Serial communication to send messages to the computer
   if (!Serial) Error(1);
   DEBUGMLN("\n");
+#endif
+
+  // выделение из Flesh памяти блоков для хранения данных (эмуляция EEPROM)
+  EEPROM.begin(memoryDeviceParam.blockSize());
+
+  // запись стандартных значений при первом запуске
+  uint8_t stat = memoryDeviceParam.begin(0, MEM_INIT_KEY);
+  if (stat == 0){
+    DEBUGMLN("read data from eeprom memory");
+  } else if (stat == 1){
+    DEBUGMLN("first write data to eeprom memory");
+  } else {
+    DEBUGMLN("ERROR write data to eeprom memory, not enough memory space");
+    Error(2);
+  }
+
+#ifdef DEBUG_SERIAL
+  DEBUGMLN("Init Key and Data from eeprom memory: ");
+  for (uint16_t i = memoryDeviceParam.startAddr(); i < memoryDeviceParam.endAddr() + 1; i++)
+    DEBUGM(String(EEPROM.read(i)) + " ");
+  DEBUGMLN();
+  
 #endif
 
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
@@ -43,73 +75,35 @@ void setup()
   FastLED.setMaxPowerInVoltsAndMilliamps(5, 1000);
 
   if (!APICLG::mDNSServerInit())
-    Error(2);
+    Error(3);
 
 }
 
 
 void loop()
 {
-/*   // String request = "POST http://192.168.0.1/api?role=begin&type-gate=rect&state=run&program-type=solid&speed=4&hsv=fc0115 HTTP/1.1";
-  APICLG::PathParameters paramFromRequest;
-  // paramFromRequest.setName("color");
-  // paramFromRequest.setValue("1");
-  // DEBUGMLN("Name: " + paramFromRequest.getName() + " val: " + paramFromRequest.getValue());
- 
-  DEBUGMLN("PathFinding starting");
-  String strPath = APICLG::pathFinding("POST http://192.168.0.1/api?role=begin&type-gate=rect&state=run&program-type=solid&speed=4&hsv=111101 HTTP/1.1");
-  DEBUGMLN("str Path: " + strPath);
-  
-  // DEBUGMLN("Parse param starting");
-  // paramFromRequest = APICLG::parseParam("intensity=30");
-  // DEBUGMLN("Name: " + paramFromRequest.getName() + " val: " + paramFromRequest.getValue());
+  if(memoryDeviceParam.tick()) DEBUGMLN("Memory Updated!");
+  // to do update memory
 
-  DEBUGMLN("Parse path starting");
-  auto params = APICLG::parsePath(strPath);
-  for (auto param : params)
-  {
-    yield();
-    DEBUGMLN("Param: " + param.getName() + " val: " + param.getValue());
-  }
-   */
+// String request = "POST http://192.168.0.1/api?role=begin&type-gate=rect&state=run&program-type=solid&speed=4&hsv=fc0115 HTTP/1.1";
 
-  // String request = "GET http://192.168.0.1/api?role=begin HTTP/1.1";
-  // static String request = "";
-  
-  // if (Serial.available())
+
+
+  // static APICLG::HTTPParameters requestParameters;
+  // static APICLG::DeviceParameters device;
+  // APICLG::RequestType method = APICLG::serverUpdate(requestParameters, device);
+
+  // switch (method)
   // {
-  //   request = Serial.readStringUntil('\n'); // Чтение строки с командой
-  //   DEBUGM("\nReceived command: ");
-  //   DEBUGMLN(request);
-  //   DEBUGMLN("path finding : " + APICLG::pathFinding(request));
+  // case APICLG::GET:
+  //   // to do
+  //   break;
+  // case APICLG::POST:
+  //   updateLedSettings(requestParameters, device);
+  //   break;
+  // default:
+  //   break;
   // }
-
-  /*   
-  DEBUGMLN("parseRequestType GET: " +  String(APICLG::parseRequestType(request)) );
-  request = "POST http://192.168.0.1/api?role=begin HTTP/1.1";
-  DEBUGMLN("parseRequestType POST: " +  String(APICLG::parseRequestType(request)) );
-  request = "PUT http://192.168.0.1/api?role=begin HTTP/1.1";
-  DEBUGMLN("parseRequestType PUT: " +  String(APICLG::parseRequestType(request)) );
-  request = "DELETE http://192.168.0.1/api?role=begin HTTP/1.1";
-  DEBUGMLN("parseRequestType DELETE: " +  String(APICLG::parseRequestType(request)) );
-  Error(5);
-  */
-
-  static APICLG::HTTPParameters requestParameters;
-  static APICLG::DeviceParameters device;
-  APICLG::RequestType method = APICLG::serverUpdate(requestParameters, device);
-
-  switch (method)
-  {
-  case APICLG::GET:
-    // to do
-    break;
-  case APICLG::POST:
-    updateLedSettings(requestParameters, device);
-    break;
-  default:
-    break;
-  }
 
 
   
@@ -132,6 +126,10 @@ void loop()
   // Error(10);
 }
 
+
+
+
+
 // void FillLEDsFromPaletteColorsSerial(uint8_t colorIndex)
 // {
 //   if (Serial.available())
@@ -141,27 +139,7 @@ void loop()
 //     DEBUGMLN(command);
 //   }
 
-//   uint8_t brightness = 255;
 
-//   for (int i = 0; i < NUM_LEDS; ++i)
-//   {
-//     // CRGB color = ColorFromPalette(paletteArr[curPal], idx, 255, LINEARBLEND);
-//     //  leds[i] = ColorFromPalette( paletteArr[command.toInt() % 44], colorIndex, brightness, NOBLEND );
-//     switch (command.toInt() % 3)
-//     {
-//     case 0:
-//       leds[i] = ColorFromPalette(paletteArr[4], colorIndex, brightness, NOBLEND);
-//       break;
-//     case 1:
-//       leds[i] = ColorFromPalette(paletteArr[4], colorIndex, brightness, LINEARBLEND);
-//       break;
-//     case 2:
-//       leds[i] = ColorFromPalette(paletteArr[4], colorIndex, brightness, LINEARBLEND_NOWRAP);
-//       break;
-//     }
-//     colorIndex += 5;
-//   }
-// }
 
 void Error(uint8_t code)
 {

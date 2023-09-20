@@ -114,7 +114,7 @@ uint8_t APICLG::mDNSServerInit(void) {
 }
 
 
-APICLG::RequestType APICLG::serverUpdate(HTTPParameters &paramReq, DeviceParameters &curParam) {
+/* APICLG::RequestType APICLG::serverUpdate(HTTPParameters &paramReq, DeviceParameters &curParam) {
 
   MDNS.update();
 
@@ -188,7 +188,7 @@ APICLG::RequestType APICLG::serverUpdate(HTTPParameters &paramReq, DeviceParamet
   }
 
   return RequestType::none;
-}
+} */
 
 // String answer;
 // if (param.requestType() == "GET")
