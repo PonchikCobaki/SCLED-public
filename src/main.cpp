@@ -1,53 +1,42 @@
-/// @file    Blink.ino
-/// @brief   Blink the first LED of an LED strip
-/// @example Blink.ino
-
 #include <Arduino.h>
-#include <FastLED.h>
 #include <EEManager.h>
+#include <FastLED.h>
 
 #include "settings.hpp"
-#include "mDNS_Server.hpp"
 #include "DeviceParameters.hpp"
+#include "Server_Handler.hpp"
 #include "palettes.hpp"
 
+APICLG::DeviceParameters deviceParam;
+EEManager memoryDeviceParam(deviceParam);
 
-
-#define DEBUG_SERIAL
-
-// основные параметры устройства
-APICLG::DeviceParameters deviceParameters;
-
-
-// объект управляющий хранением данных устройтсва в энергонезависимой памяти
-EEManager memoryDeviceParam(deviceParameters);
 
 CRGB leds[NUM_LEDS];
 
-
-// String command{};
-
-
-void updateLedSettings(APICLG::HTTPParameters &paramReq, APICLG::DeviceParameters &param);
-
-// void FillLEDsFromPaletteColorsSerial(uint8_t colorIndex);
-void FillingLEDsSolidColors(CHSV hsv);
-void FillingLEDsSolidColors(const char *hsvCStr);
 void Error(uint8_t code);
 
+void FillingLEDsSolidColors(const uint8_t hue, const uint8_t sat, const uint8_t val);
+void FillingLEDsSolidColors(CHSV hsv);
+void FillingLEDsSolidColors(const char *hsvCStr);
+void FillLEDsFromPaletteColors(const APICLG::DeviceParameters &devPar);
+
+void setup() {
+  #ifdef DEBUG_SERIAL
+    Serial.begin(115200); // Start the Serial communication to send messages to the computer
+    if (!Serial) Error(1);
+    DEBUGMLN("\n");
+  #endif
+
+  delay( 3000 ); // power-up safety delay
+
+  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
+  FastLED.setCorrection(TypicalLEDStrip); // GRB ordering is typical
+  FastLED.setBrightness(64);
+  // FastLED.setMaxPowerInVoltsAndMilliamps(5, 1500);
 
 
-
-void setup()
-{
-// вывод данных через UART, используется для отладки
-#ifdef DEBUG_SERIAL
-  Serial.begin(115200); // Start the Serial communication to send messages to the computer
-  if (!Serial) Error(1);
-  DEBUGMLN("\n");
-#endif
-
-  // выделение из Flesh памяти блоков для хранения данных (эмуляция EEPROM)
+#ifdef SAVE_EEPROM
+    // выделение из Flesh памяти блоков для хранения данных (эмуляция EEPROM)
   EEPROM.begin(memoryDeviceParam.blockSize());
 
   // запись стандартных значений при первом запуске
@@ -67,78 +56,87 @@ void setup()
     DEBUGM(String(EEPROM.read(i)) + " ");
   DEBUGMLN();
   
-#endif
-
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
-  FastLED.setCorrection(TypicalLEDStrip); // GRB ordering is typical
-  FastLED.setBrightness(64);
-  FastLED.setMaxPowerInVoltsAndMilliamps(5, 1000);
+#endif // DEBUG_SERIAL
+#endif // SAVE_EEPROM
 
   if (!APICLG::mDNSServerInit())
     Error(3);
-
 }
-
-
-void loop()
-{
-  if(memoryDeviceParam.tick()) DEBUGMLN("Memory Updated!");
-  // to do update memory
 
 // String request = "POST http://192.168.0.1/api?role=begin&type-gate=rect&state=run&program-type=solid&speed=4&hsv=fc0115 HTTP/1.1";
 
+void loop() {
+  
+  #ifdef SAVE_EEPROM
+  if(memoryDeviceParam.tick()){
+    DEBUGMLN("Memory Updated!");
 
+    DEBUGMLN("role: " + String(deviceParam.role));
+    DEBUGMLN("type-gate: " + String(deviceParam.typeGate));
+    DEBUGMLN("offsetVoltage: " + String(deviceParam.offsetVoltage));
+    DEBUGMLN("state: " + String(deviceParam.state)); 
+    DEBUGMLN("program-type: " + String(deviceParam.programType));
+    DEBUGMLN("gradientNumber: " + String(deviceParam.gradientNumber));
+    DEBUGMLN("gradientScale: " + String(deviceParam.gradientScale));
+    DEBUGMLN("blendType: " + String(deviceParam.blendType));
+    DEBUGMLN("speed: " + String(deviceParam.speed));
+    DEBUGMLN("hue: " + String(deviceParam.hue));
+    DEBUGMLN("sat: " + String(deviceParam.sat));
+    DEBUGMLN("val: " + String(deviceParam.val));
+  }
+  #endif
 
-  // static APICLG::HTTPParameters requestParameters;
-  // static APICLG::DeviceParameters device;
-  // APICLG::RequestType method = APICLG::serverUpdate(requestParameters, device);
+  APICLG::serverUpdate();
 
-  // switch (method)
+  // if (Serial.available())
   // {
-  // case APICLG::GET:
-  //   // to do
-  //   break;
-  // case APICLG::POST:
-  //   updateLedSettings(requestParameters, device);
-  //   break;
-  // default:
-  //   break;
+  //   String request = Serial.readStringUntil('\n');
+  //   DEBUGMLN(request);
+
+  //   String path = APICLG::pathFinding(request);
+  //   DEBUGMLN(path);
+  //   APICLG::parsePath(path);
+  //   DEBUGMLN("role: " + String(deviceParam.role));
+  //   DEBUGMLN("type-gate: " + String(deviceParam.typeGate));
+  //   DEBUGMLN("offsetVoltage: " + String(deviceParam.offsetVoltage));
+  //   DEBUGMLN("state: " + String(deviceParam.state)); 
+  //   DEBUGMLN("program-type: " + String(deviceParam.programType));
+  //   DEBUGMLN("speed: " + String(deviceParam.speed));
+  //   DEBUGMLN("hue: " + String(deviceParam.hue));
+  //   DEBUGMLN("sat: " + String(deviceParam.sat));
+  //   DEBUGMLN("val: " + String(deviceParam.val));
   // }
 
+
+  switch (deviceParam.programType)
+  {
+  case APICLG::ProgramType::solid:
+    FillingLEDsSolidColors(deviceParam.hue, deviceParam.sat, deviceParam.val);
+    break;
+
+  case APICLG::ProgramType::blink:
+  // to do
+    break;
+
+  case APICLG::ProgramType::gradient:
+    FillLEDsFromPaletteColors(deviceParam);
+    break;
+
+  case APICLG::ProgramType::wave:
+  // to do
+    break;
+
+  default:
+  // to do
+    break;
+  }
 
   
 
+  // Error(43);
 
-  // static uint8_t currentPalette{7};
-  // static uint8_t colorIndex{0};
-  // colorIndex += 1;
-  // static uint8_t brightness = 255;
-  // for (int i = 0; i < NUM_LEDS; ++i)
-  // {
-  //   // CRGB color = ColorFromPalette(paletteArr[curPal], idx, 255, LINEARBLEND);
-  //   // leds[i] = ColorFromPalette(paletteArr[currentPalette % 44], colorIndex, brightness, LINEARBLEND);
-  //   colorIndex += 5;
-  // }
-
-  // FastLED.show();
-
-  // FastLED.delay(100);
-  // Error(10);
 }
-
-
-
-
-
-// void FillLEDsFromPaletteColorsSerial(uint8_t colorIndex)
-// {
-//   if (Serial.available())
-//   {
-//     command = Serial.readStringUntil('\n'); // Чтение строки с командой
-//     DEBUGM("Received command: ");
-//     DEBUGMLN(command);
-//   }
-
+// POST http://192.168.0.1/api?hsv=00fff0 HTTP/1.1
 
 
 void Error(uint8_t code)
@@ -150,47 +148,13 @@ void Error(uint8_t code)
   }
 }
 
-void updateLedSettings(APICLG::HTTPParameters &paramReq, APICLG::DeviceParameters &device)
-{
-  for (auto param : paramReq.getParameters()) {
-    if (param.getName() == "role"){
-      // to do
-      DEBUGMLN("role = " + param.getValue());
-      String valReq = param.getValue();
-      
-      if (valReq == "begin"){
-        device.role = APICLG::RoleType::begin;
-      } else if (valReq == "middle"){
-        device.role = APICLG::RoleType::middle;
-      } else if (valReq == "end"){
-        device.role = APICLG::RoleType::end;
-      }
-
-
-    } else if (param.getName() == "state") {
-      // to do
-      DEBUGMLN("state = " + param.getValue());
-    } else if (param.getName() == "program-type") {
-      // to do
-      DEBUGMLN("program-type = " + param.getValue());
-    } else if (param.getName() == "speed") {
-      // to do
-      DEBUGMLN("speed = " + param.getValue());
-    } else if (param.getName() == "hsv")
-    {
-      FillingLEDsSolidColors(param.getValue().c_str());
-      #ifdef DEBUG_SERIAL
-      uint32_t hsvHex = strtol(param.getValue().c_str(), NULL, 16);
-      CHSV hsv((hsvHex >> 16) & 0xFF, (hsvHex >> 8) & 0xFF, hsvHex & 0xFF); 
-      DEBUGMLN("hsv = " + String(hsv.hue) + ", "  + String(hsv.saturation) + ", " + String(hsv.value));
-      #endif
-    }
-
-
-  }
-
-
-
+void FillingLEDsSolidColors(const uint8_t hue, const uint8_t sat, const uint8_t val){
+  CHSV hsv;
+  hsv.h = hue;
+  hsv.s = sat;
+  hsv.v = val;
+  fill_solid(leds, NUM_LEDS, hsv);
+  FastLED.show();
 }
 
 void FillingLEDsSolidColors(CHSV hsv){
@@ -201,4 +165,21 @@ void FillingLEDsSolidColors(const char *hsvCStr){
   uint32_t hsvHex = strtol(hsvCStr, NULL, 16);
   CHSV hsv((hsvHex >> 16) & 0xFF, (hsvHex >> 8) & 0xFF, hsvHex & 0xFF);
   fill_solid(leds, NUM_LEDS, hsv);
+  FastLED.show();
+}
+
+void FillLEDsFromPaletteColors(const APICLG::DeviceParameters &devPar)
+{
+  static uint8_t colorIndex = 0;
+  colorIndex += devPar.speed;
+  for (uint32_t i = 0; i < NUM_LEDS; ++i) {
+    leds[i] = ColorFromPalette(paletteArr[devPar.gradientNumber % 44], colorIndex, devPar.val, LINEARBLEND);
+    colorIndex += devPar.gradientScale;
+  }
+
+  FastLED.show();
+
+  FastLED.delay( 1000 / devPar.offsetVoltage );
+  // DEBUGMLN("deley ms: " + String(1275 / devPar.speed));
+  
 }

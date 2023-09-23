@@ -119,9 +119,6 @@ APICLG::PathParameters APICLG::parseParam(String str)
   int delimiter = str.indexOf('=');
   if (delimiter != -1)
   {
-    String name = str.substring(0, delimiter);
-    if (name == "role")
-      return APICLG::PathParameters(name, str.substring(delimiter + 1, str.length()));
     PathParameters param(
         str.substring(0, delimiter),
         str.substring(delimiter + 1, str.length()));
