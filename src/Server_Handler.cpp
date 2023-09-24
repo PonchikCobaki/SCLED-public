@@ -8,6 +8,7 @@ namespace APICLG {
   const char* password = STAPSK;
 
 
+
   // TCP server at port 80 will respond to HTTP requests
   WiFiServer connectedServer(80);
 
@@ -76,12 +77,7 @@ APICLG::RequestType APICLG::serverUpdate() {
     uint8_t reqType = APICLG::parseRequestType(req);
     uint8_t stateBit = 0;
     
-
-    // Json buffer
-    StaticJsonDocument<256> doc;
-    
     String answer;
-    
 
     switch (reqType)
     {
@@ -91,39 +87,28 @@ APICLG::RequestType APICLG::serverUpdate() {
       
       // Answer to client
       if (stateBit == 0){
+        // Json buffer
+        StaticJsonDocument<sizeJson> doc;
+        createJson(doc);
+        
         answer = "HTTP/1.1 200 OK\r\n";
-        doc["role"] = String(deviceParam.role);
-        doc["type-gate"] = String(deviceParam.typeGate);
-        doc["offsetVoltage"] = String(deviceParam.offsetVoltage);
-      
-        doc["state"] = String(deviceParam.state);
-        doc["program-type"] = String(deviceParam.programType);
-
-        doc["gradient-number"] = String(deviceParam.gradientNumber);
-        doc["gradient-scale"] = String(deviceParam.gradientScale);
-        doc["blend-type"] = String(deviceParam.blendType);
-        doc["speed"] = String(deviceParam.speed);
-
-        JsonArray hsvParam = doc.createNestedArray("hsv");
-        hsvParam.add(String(deviceParam.hue));
-        hsvParam.add(String(deviceParam.sat));
-        hsvParam.add(String(deviceParam.val));
-
         answer += "Content-Type: application/json\r\n";
         answer += "Content-Length: " + String(measureJsonPretty(doc)) + "\r\n";
         answer += "Connection: close\r\n";
         answer += "\r\n";
         client.print(answer);
+        
         serializeJsonPretty(doc, client);
         client.stop();
         serializeJsonPretty(doc, Serial);
+
       } else {
         answer = "HTTP/1.1 400 Bad Request\r\n";
         answer += "\r\n";
         client.print(answer);
       }
 
-      DEBUGMLN("Answer sent to client: " + answer);
+      DEBUGMLN("\nAnswer sent to client: " + answer);
       return APICLG::GET;
       break;
     }

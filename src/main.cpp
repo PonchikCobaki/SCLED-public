@@ -172,14 +172,16 @@ void FillLEDsFromPaletteColors(const APICLG::DeviceParameters &devPar)
 {
   static uint8_t colorIndex = 0;
   colorIndex += devPar.speed;
-  for (uint32_t i = 0; i < NUM_LEDS; ++i) {
-    leds[i] = ColorFromPalette(paletteArr[devPar.gradientNumber % 44], colorIndex, devPar.val, LINEARBLEND);
+  for (uint16_t i = 0; i < NUM_LEDS; ++i) {
+    leds[i] = ColorFromPalette(paletteArr[devPar.gradientNumber % 44], colorIndex, devPar.val, TBlendType(devPar.blendType));
     colorIndex += devPar.gradientScale;
   }
-
+  
   FastLED.show();
 
-  FastLED.delay( 1000 / devPar.offsetVoltage );
+  // FastLED.show();
+
+  FastLED.delay( 800 / devPar.offsetVoltage );
   // DEBUGMLN("deley ms: " + String(1275 / devPar.speed));
   
 }

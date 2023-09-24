@@ -15,6 +15,8 @@ namespace APICLG{
   // TCP server at port 80 will respond to HTTP requests
   extern WiFiServer connectedServer;
 
+  extern const uint16_t sizeJson;
+
   uint8_t mDNSServerInit(void);
   APICLG::RequestType serverUpdate();
 

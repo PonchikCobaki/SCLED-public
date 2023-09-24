@@ -1,5 +1,7 @@
 #include "DeviceParameters.hpp"
 
+
+
 /* 
 Function retern 
 0 - good update device parameters
@@ -129,7 +131,7 @@ uint8_t APICLG::updateDeviceParameters(const APICLG::PathParameters &param)
       uint8_t h = (hsvHex >> 16) & 0xFF;
       uint8_t s = (hsvHex >> 8) & 0xFF;
       uint8_t v = hsvHex & 0xFF;
-      DEBUGMLN("hsv: " + String(h) + " " + String(s) + " " + String(v));
+      // DEBUGMLN("hsv: " + String(h) + " " + String(s) + " " + String(v));
       if (deviceParam.hue != h || deviceParam.sat != s || deviceParam.val != v){
         deviceParam.hue = h;
         deviceParam.sat = s;
@@ -151,4 +153,112 @@ uint8_t APICLG::updateDeviceParameters(const APICLG::PathParameters &param)
   }
   
   return 1;
+}
+
+uint8_t APICLG::createJson(StaticJsonDocument<sizeJson> &jsonDoc)
+{
+  if(!jsonDoc.capacity()){
+    jsonDoc.clear();
+  }
+
+  bool badBit = false;
+
+  if (deviceParam.role == APICLG::RoleType::begin){
+    jsonDoc["role"] = "begin";
+  }
+  else if (deviceParam.role == APICLG::RoleType::middle){
+    jsonDoc["role"] = "middle";
+  }
+  else if (deviceParam.role == APICLG::RoleType::end){
+    jsonDoc["role"] = "end";
+  }
+  else{
+    DEBUGMLN("Invalid role");
+    badBit = true;
+  }
+
+  if (deviceParam.typeGate == APICLG::TypeGate::strip){
+    jsonDoc["type-gate"] = "strip";
+  }
+  else if (deviceParam.typeGate == APICLG::TypeGate::rect){
+    jsonDoc["type-gate"] = "rect";
+  }
+  else if (deviceParam.typeGate == APICLG::TypeGate::triangle){
+    jsonDoc["type-gate"] = "triangle";
+  }
+  else if (deviceParam.typeGate == APICLG::TypeGate::hex){
+    jsonDoc["type-gate"] = "hex";
+  }
+  else if (deviceParam.typeGate == APICLG::TypeGate::circle){
+    jsonDoc["type-gate"] = "circle";
+  }
+  else{
+    DEBUGMLN("Invalid role");
+    badBit = true;
+  }
+
+  jsonDoc["offset-voltage"] = deviceParam.offsetVoltage;
+
+  if (deviceParam.state == APICLG::StateType::off){
+    jsonDoc["state"] = "off";
+  }
+  else if (deviceParam.state == APICLG::StateType::run){
+    jsonDoc["state"] = "run";
+  }
+  else if (deviceParam.state == APICLG::StateType::pause){
+    jsonDoc["state"] = "pause";
+  }
+  else if (deviceParam.state == APICLG::StateType::lowBattery){
+    jsonDoc["state"] = "low-battery";
+  }
+  else{
+    DEBUGMLN("Invalid role");
+    badBit = true;
+  }
+
+  if (deviceParam.programType == APICLG::ProgramType::solid){
+    jsonDoc["program-type"] = "solid";
+  }
+  else if (deviceParam.programType == APICLG::ProgramType::blink){
+    jsonDoc["program-type"] = "blink";
+  }
+  else if (deviceParam.programType == APICLG::ProgramType::gradient){
+    jsonDoc["program-type"] = "gradient";
+  }
+  else if (deviceParam.programType == APICLG::ProgramType::wave){
+    jsonDoc["program-type"] = "wave";
+  }
+  else{
+    DEBUGMLN("Invalid role");
+    badBit = true;
+  }
+
+  jsonDoc["gradient-number"] = deviceParam.gradientNumber;
+  jsonDoc["gradient-scale"] = deviceParam.gradientScale;
+
+  if (deviceParam.blendType == NOBLEND){
+    jsonDoc["blend-type"] = "noblend";
+  }
+  else if (deviceParam.blendType == LINEARBLEND){
+    jsonDoc["blend-type"] = "linearblend";
+  }
+  else if (deviceParam.blendType == LINEARBLEND_NOWRAP){
+    jsonDoc["blend-type"] = "linearblend-nowarp";
+  }
+  else{
+    DEBUGMLN("Invalid role");
+    badBit = true;
+  }
+
+  jsonDoc["speed"] = deviceParam.speed;
+
+  JsonArray hsvParam = jsonDoc.createNestedArray("hsv");
+    hsvParam.add(String(deviceParam.hue));
+    hsvParam.add(String(deviceParam.sat));
+    hsvParam.add(String(deviceParam.val));
+
+  if (badBit){
+    return 1;
+  }
+  return 0;
 }

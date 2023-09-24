@@ -1,4 +1,4 @@
-#include "Path_parameters.hpp"
+#include "API_Parser.hpp"
 
 
 
@@ -13,26 +13,6 @@ APICLG::PathParameters::PathParameters(){}
 APICLG::PathParameters::PathParameters(String name, String value)
 {
   this->name = name;
-  this->value = value;
-}
-
-const String &APICLG::PathParameters::getName()
-{
-  return name;
-}
-
-const String &APICLG::PathParameters::getValue()
-{
-  return value;
-}
-
-void APICLG::PathParameters::setName(const String &name)
-{
-  this->name = name;
-}
-
-void APICLG::PathParameters::setValue(const String &value)
-{
   this->value = value;
 }
 
@@ -78,9 +58,10 @@ String APICLG::pathFinding(const String &req)
 
 // Format example: /api?color=1&intensity=30&role=start
 // POST http://192.168.0.1/api?role=begin&type-gate=rect&state=run&program-type=solid&speed=4&hsv=fc0115
-std::vector<APICLG::PathParameters> APICLG::parsePath(String path)
+uint8_t APICLG::parsePath(const String &path)
 {
-  std::vector<PathParameters> result;
+  
+  
   int startSliceInd = path.indexOf(signatureStr);
   if (startSliceInd != -1)
   {
@@ -89,53 +70,69 @@ std::vector<APICLG::PathParameters> APICLG::parsePath(String path)
     while (startSliceInd + 1 < path.length())
     {
       endSliceInd = path.indexOf('&', startSliceInd + 1);
-      if (endSliceInd == -1 && startSliceInd + 1 < path.length())
+      if (endSliceInd == -1 && startSliceInd + 3 < path.length()) // the last parameter of the path ...&a=3
         endSliceInd = path.length();
 
       if (endSliceInd != -1)
       {
         String paramStr = path.substring(startSliceInd + 1, endSliceInd);
         // DEBUGMLN("param: " + paramStr);
-        PathParameters param = parseParam(paramStr);
-        if (!param.getValue().isEmpty())
-          result.push_back(param);
+
+        // parse on name-value
+        PathParameters param;
+        if (parseParam(param, paramStr) == 0){ 
+          if(APICLG::updateDeviceParameters(param) == 0){
+            // save to device parameters
+            memoryDeviceParam.update();
+          }
+        }
+        else {
+          DEBUGMLN("Invalid param in parse path: " + paramStr);
+          return 1;
+        }
+
         startSliceInd = endSliceInd;
       }
       else
       {
-        break;
+        DEBUGMLN("Invalid param in parse path: " + path);
+        return 1;
       }
-      yield();
+      // yield();
     }
   }
 
-  return result;
+  return 0;
 }
 
 
 // Format example: color=1
-APICLG::PathParameters APICLG::parseParam(String str)
+uint8_t APICLG::parseParam(APICLG::PathParameters &param, const String &str)
 {
   int delimiter = str.indexOf('=');
   if (delimiter != -1)
   {
-    String name = str.substring(0, delimiter);
-    if (name == "role")
-      return APICLG::PathParameters(name, str.substring(delimiter + 1, str.length()));
-    PathParameters param(
+    param = {
         str.substring(0, delimiter),
-        str.substring(delimiter + 1, str.length()));
+        str.substring(delimiter + 1, str.length()) 
+    };
     // DEBUGMLN("param: " + param.getName() + " = " + param.getValue());
-    return param;
+    return 0;
   }
   else
   {
-    return PathParameters();
+    DEBUGMLN("Invalidparam without assignment \"=\": " + str);
+    return 1;
   }
 }
 
 uint8_t APICLG::parseRequestType(String &req)
 {
+  while (req[0] == ' ')
+  {
+    req = req.substring(1, req.length());
+  }
+
   int addr_start = req.indexOf(' ');
   String reqType = req.substring(0, addr_start);
   if (reqType == "GET")
@@ -148,3 +145,6 @@ uint8_t APICLG::parseRequestType(String &req)
     return APICLG::DELETE;
   else return APICLG::GET;
 }
+
+
+

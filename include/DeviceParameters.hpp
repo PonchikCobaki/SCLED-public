@@ -3,6 +3,7 @@
 #include <Stream.h>
 #include <EEManager.h>
 #include <FastLED.h>
+#include <ArduinoJson.h>
 
 #include "settings.hpp"
 #include "Path_parameters.hpp"
@@ -63,8 +64,10 @@ namespace APICLG {
     
     
   };
+  const uint16_t sizeJson = 256;
 
   uint8_t updateDeviceParameters(const APICLG::PathParameters &param);
+  uint8_t createJson(StaticJsonDocument<sizeJson> &jsonDoc);
 }
 
 extern EEManager memoryDeviceParam; 

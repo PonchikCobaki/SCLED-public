@@ -1,0 +1,20 @@
+role: Begin/End/Middle
+type-gate: strip/rect/hex/triangle/circle
+state: off/run/pause/low_batt
+Program-Type: Solid/Gradient/Blink/Wave
+speed: 0-255
+Color: HSV (255,255,255)/ RGB ?
+
+test example
+{
+  "role": "begin",
+  "type-gate": "rect",
+  "state": "run",
+  "program-type": "solid",
+  "speed": 4,
+  "hsv": [
+    255,
+    255,
+    255
+  ]
+}
