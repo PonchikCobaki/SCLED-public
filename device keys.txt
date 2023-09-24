@@ -1,20 +1,29 @@
-role: Begin/End/Middle
-type-gate: strip/rect/hex/triangle/circle
-state: off/run/pause/low_batt
-Program-Type: Solid/Gradient/Blink/Wave
+role: begin/ middle/ end
+type-gate: strip/ rect/ hex/ triangle/ circle
+offset-voltage: -256 to 255 (+- 250mV at range 0-1V)
+state: off/ run/ pause/ low_batt
+program-type: solid/ gradient/ blink/ wave
+gradient-number: 0-43
+blend-type: noblend/ linearblend/ linearblend-nowarp
 speed: 0-255
-Color: HSV (255,255,255)/ RGB ?
+hsv: ffffff  color format(hue, saturation, brightness)(255,255,255)
 
-test example
-{
-  "role": "begin",
-  "type-gate": "rect",
-  "state": "run",
-  "program-type": "solid",
-  "speed": 4,
-  "hsv": [
-    255,
-    255,
-    255
-  ]
+Json example {
+    "role": "middle",
+    "type-gate": "strip",
+    "offset-voltage": 1,
+    "state": "off",
+    "program-type": "gradient",
+    "gradient-number": 1,
+    "gradient-scale": 1,
+    "blend-type": "noblend",
+    "speed": 0,
+    "hsv": [
+        "0",
+        "255",
+        "160"
+    ]
 }
+
+HTTP example
+http://192.168.0.168/api?offset-voltage=1&program-type=gradient&gradient-number=1&blend-type=noblend&hsv=00ffa0&gradient-scale=1&speed=0
