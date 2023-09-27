@@ -36,7 +36,10 @@ uint8_t APICLG::mDNSServerInit(void) {
   //   the fully-qualified domain name is "esp8266.local"
   // - second argument is the IP address to advertise
   //   we send our IP address on the WiFi network
-  if (!MDNS.begin("esp8266")) {
+  uint16_t chipId = ESP.getChipId();
+  String name = "esp8266_" + String(chipId);
+  DEBUGMLN("Device name: " + name);
+  if (!MDNS.begin(name)) {
     DEBUGMLN("Error setting up MDNS responder!");
     return 0;
   }
@@ -64,10 +67,19 @@ APICLG::RequestType APICLG::serverUpdate() {
     DEBUGMLN("New client");
     
     // Wait for data from client to become available
-    while ((client.connected() && !client.available())) {
+
+    uint8_t attemp = 5;
+    
+    for (uint8_t i = 0; i < attemp || (client.connected() && !client.available()); i++ ) {
       yield();
+      if (i == attemp) {
+        client.stop();
+        DEBUGMLN("No data from client");
+        return RequestType::ERROR;
+      }
     }
     
+
     // Read the first line of HTTP request
     String req = client.readStringUntil('\r');
     // DEBUGMLN("Request from client: " + req);
@@ -152,7 +164,6 @@ APICLG::RequestType APICLG::serverUpdate() {
       return RequestType::NONE;
       break;
     }
-
     
     
     // if (reqType == APICLG::GET)

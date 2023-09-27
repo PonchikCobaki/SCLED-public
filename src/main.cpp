@@ -29,7 +29,7 @@ void setup() {
 
   delay( 3000 ); // power-up safety delay
 
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
+  FastLED.addLeds<LED_TYPE, DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setCorrection(TypicalLEDStrip); // GRB ordering is typical
   FastLED.setBrightness(64);
   // FastLED.setMaxPowerInVoltsAndMilliamps(5, 1500);
@@ -87,6 +87,7 @@ void loop() {
   #endif
 
   APICLG::serverUpdate();
+  yield();
 
   // if (Serial.available())
   // {

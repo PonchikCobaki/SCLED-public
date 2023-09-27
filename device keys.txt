@@ -6,6 +6,7 @@ program-type: solid/ gradient/ blink/ wave
 gradient-number: 0-43
 blend-type: noblend/ linearblend/ linearblend-nowarp
 speed: 0-255
+pradient-scale: 0-255
 hsv: ffffff  color format(hue, saturation, brightness)(255,255,255)
 
 Json example {

@@ -233,24 +233,26 @@ uint8_t APICLG::createJson(StaticJsonDocument<sizeJson> &jsonDoc)
     badBit = true;
   }
 
-  jsonDoc["gradient-number"] = deviceParam.gradientNumber;
-  jsonDoc["gradient-scale"] = deviceParam.gradientScale;
+  if (deviceParam.programType == APICLG::ProgramType::gradient){
+    jsonDoc["gradient-number"] = deviceParam.gradientNumber;
+    jsonDoc["gradient-scale"] = deviceParam.gradientScale;
 
-  if (deviceParam.blendType == NOBLEND){
-    jsonDoc["blend-type"] = "noblend";
-  }
-  else if (deviceParam.blendType == LINEARBLEND){
-    jsonDoc["blend-type"] = "linearblend";
-  }
-  else if (deviceParam.blendType == LINEARBLEND_NOWRAP){
-    jsonDoc["blend-type"] = "linearblend-nowarp";
-  }
-  else{
-    DEBUGMLN("Invalid role");
-    badBit = true;
-  }
+    if (deviceParam.blendType == NOBLEND){
+      jsonDoc["blend-type"] = "noblend";
+    }
+    else if (deviceParam.blendType == LINEARBLEND){
+      jsonDoc["blend-type"] = "linearblend";
+    }
+    else if (deviceParam.blendType == LINEARBLEND_NOWRAP){
+      jsonDoc["blend-type"] = "linearblend-nowarp";
+    }
+    else{
+      DEBUGMLN("Invalid role");
+      badBit = true;
+    }
 
-  jsonDoc["speed"] = deviceParam.speed;
+    jsonDoc["speed"] = deviceParam.speed;
+  }
 
   JsonArray hsvParam = jsonDoc.createNestedArray("hsv");
     hsvParam.add(String(deviceParam.hue));
