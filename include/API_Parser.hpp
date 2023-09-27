@@ -15,6 +15,7 @@ namespace APICLG {
     POST,
     PUT,
     DELETE,
+    ERROR,
     NONE
   };
 
