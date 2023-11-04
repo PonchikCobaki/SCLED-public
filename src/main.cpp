@@ -19,6 +19,7 @@ void FillingLEDsSolidColors(const uint8_t hue, const uint8_t sat, const uint8_t 
 void FillingLEDsSolidColors(CHSV hsv);
 void FillingLEDsSolidColors(const char *hsvCStr);
 void FillLEDsFromPaletteColors(const APICLG::DeviceParameters &devPar);
+void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const uint8_t speed, const uint8_t smooth);
 
 void setup() {
   #ifdef DEBUG_SERIAL
@@ -27,11 +28,11 @@ void setup() {
     DEBUGMLN("\n");
   #endif
 
-  delay( 3000 ); // power-up safety delay
+  delay( 1000 ); // power-up safety delay
 
   FastLED.addLeds<LED_TYPE, DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setCorrection(TypicalLEDStrip); // GRB ordering is typical
-  FastLED.setBrightness(64);
+  FastLED.setBrightness(255);
   // FastLED.setMaxPowerInVoltsAndMilliamps(5, 1500);
 
 
@@ -107,29 +108,44 @@ void loop() {
   //   DEBUGMLN("sat: " + String(deviceParam.sat));
   //   DEBUGMLN("val: " + String(deviceParam.val));
   // }
+  static uint8_t lowBattRepeat = 5;
+  if (deviceParam.state == APICLG::StateType::off){
+    FillingLEDsSolidColors(0, 0, 0);
+  }
+  else if (deviceParam.state == APICLG::StateType::run){
+    lowBattRepeat = 5;
+    switch (deviceParam.programType)
+    {
+    case APICLG::ProgramType::solid:
+      FillingLEDsSolidColors(deviceParam.hue, deviceParam.sat, deviceParam.val);
+      break;
 
+    case APICLG::ProgramType::blink:
+    // to do
+      break;
 
-  switch (deviceParam.programType)
-  {
-  case APICLG::ProgramType::solid:
-    FillingLEDsSolidColors(deviceParam.hue, deviceParam.sat, deviceParam.val);
-    break;
+    case APICLG::ProgramType::gradient:
+      FillLEDsFromPaletteColors(deviceParam);
+      break;
 
-  case APICLG::ProgramType::blink:
-  // to do
-    break;
+    case APICLG::ProgramType::wave:
+    // to do
+      break;
 
-  case APICLG::ProgramType::gradient:
-    FillLEDsFromPaletteColors(deviceParam);
-    break;
-
-  case APICLG::ProgramType::wave:
-  // to do
-    break;
-
-  default:
-  // to do
-    break;
+    default:
+    // to do
+      break;
+    }
+  }
+  else if (deviceParam.state == APICLG::StateType::pause){
+    // skip update frame 
+  }
+  else if (deviceParam.state == APICLG::StateType::lowBattery){
+    if (lowBattRepeat > 0){ 
+      lowBattRepeat--;
+      SmoothBlink(0, 255, 10 + lowBattRepeat * 25, 15, 35);
+    }
+    // SmoothBlink(deviceParam.hue, deviceParam.sat, deviceParam.val, deviceParam.speed, deviceParam.gradientScale);
   }
 
   
@@ -173,16 +189,44 @@ void FillLEDsFromPaletteColors(const APICLG::DeviceParameters &devPar)
 {
   static uint8_t colorIndex = 0;
   colorIndex += devPar.speed;
-  for (uint16_t i = 0; i < NUM_LEDS; ++i) {
-    leds[i] = ColorFromPalette(paletteArr[devPar.gradientNumber % 44], colorIndex, devPar.val, TBlendType(devPar.blendType));
-    colorIndex += devPar.gradientScale;
-  }
-  
+  // for (uint16_t i = 0; i < NUM_LEDS; ++i) {
+  //   leds[i] = ColorFromPalette(paletteArr[devPar.gradientNumber % 44], colorIndex, devPar.val, TBlendType(devPar.blendType));
+  //   colorIndex += devPar.gradientScale;
+    
+  // }
+  fill_palette(leds, NUM_LEDS, colorIndex, devPar.gradientScale,
+              paletteArr[devPar.gradientNumber % 44], devPar.val,
+              TBlendType(devPar.blendType));
+  FastLED.delay(1000/UPDATES_PER_SECOND);
   FastLED.show();
+}
 
-  // FastLED.show();
-
-  FastLED.delay( 800 / devPar.offsetVoltage );
-  // DEBUGMLN("deley ms: " + String(1275 / devPar.speed));
-  
+/// @brief Плавное мигание всей лентой 
+/// @note Зависимость периода от скорости и плавности T = 1/(V+Sm) - обратно пропорциональная
+/// на больших значениях T имеет смысл уменьшить Sm до 15, менять только V. На маленьких
+/// значениях T имеет смысл увеличить Sm  15     
+void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const uint8_t speed, const uint8_t smooth)
+{
+  uint8_t hue2 = map8(hue, 0, 191);
+  CHSV hsv(hue2, sat, 0);
+  CRGB rgb;
+  float step = (float)val/smooth;
+  for (float i = 0; (i <= val) & (val - i > step); i+= step){
+    hsv.v = i;
+    hsv2rgb_raw(hsv, rgb);
+    fill_solid(leds, NUM_LEDS, rgb);
+    FastLED.show();
+    FastLED.delay(1000/speed);
+  }
+  yield();
+  for (float i = 0; (i <= val) & (val - i > step); i+= step){
+    hsv.v = val - i;
+    hsv2rgb_raw(hsv, rgb);
+    fill_solid(leds, NUM_LEDS, rgb);
+    FastLED.show();
+    FastLED.delay(1000/speed);
+  }
+  rgb = 0;
+  fill_solid(leds, NUM_LEDS, rgb);
+  FastLED.show();
 }
