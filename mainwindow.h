@@ -7,6 +7,7 @@
 #include <QMap>
 #include <QColorDialog>
 #include <QColor>
+#include <QUrlQuery>
 
 #include <mdns.h>
 #include <service.h>
@@ -38,16 +39,20 @@ public:
     QMap<QString, QString> reverseNameMap; // User device name,  Service name
 
     QNetworkAccessManager *manager;
-    QColorDialog          *colorDialog;
+    QColorDialog          *colorDialog = nullptr;
 private slots:
 
     void on_mDNSupdate_pressed();
+
+    void on_colorPushButton_clicked();
 
 private:
     Ui::MainWindow *ui;
 
     void createBrowser();
     void resolve(const QMdnsEngine::Service &service);
+
+    void onOnColorChanged(const QColor &color);
 
 };
 #endif // MAINWINDOW_H

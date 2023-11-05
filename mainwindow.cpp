@@ -27,23 +27,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     createBrowser();
 
-
-
-    colorDialog = new QColorDialog(this);
-    connect(colorDialog, &QColorDialog::colorSelected, [=](const QColor &color){
-        int h, s, v;
-        color.getHsv(&h, &s, &v);
-        qDebug() << "h: " << h << "  s: " << s << "  v: " << v;
-    });
-    connect(colorDialog, &QColorDialog::currentColorChanged, [=](const QColor &color){
-        int h, s, v;
-        color.getHsv(&h, &s, &v);
-        qDebug() << "h: " << h << "  s: " << s << "  v: " << v;
-    });
-    QColor color = QColor();
-    color.setHsv(100, 255, 100);
-    colorDialog->setCurrentColor(color);
-    colorDialog->show();
 }
 
 
@@ -111,6 +94,39 @@ void MainWindow::resolve(const QMdnsEngine::Service &service)
 
 }
 
+void MainWindow::onOnColorChanged(const QColor &color)
+{
+    int h, s, v;
+    color.getHsv(&h, &s, &v);
+    qDebug() << "h: " << h << "  s: " << s << "  v: " << v;
+
+    QString hexColor = QString("%1%2%3").arg((int)((h / 360.0) * 255), 2, 16).arg(s, 2, 16).arg(v, 2, 16);
+    qDebug() << "hexColor: " << hexColor;
+
+    QPalette Pal(palette());
+    Pal.setColor(QPalette::Button, color.rgb());
+    ui->colorPushButton->setAutoFillBackground(true);
+    ui->colorPushButton->setPalette(Pal);
+
+
+    if (!devicesMap.isEmpty()){
+        QHostAddress address = devicesMap.first();
+
+        QNetworkRequest request;
+
+        QUrl url = QUrl::fromUserInput(address.toString() + "/api");
+
+        QUrlQuery query;
+        query.addQueryItem("state", "run");
+        query.addQueryItem("hsv", hexColor);
+        url.setQuery(query.query());
+
+        request.setUrl(url);
+        manager->get(request);
+        //manager->post(request);
+    }
+}
+
 
 
 void MainWindow::on_mDNSupdate_pressed()
@@ -124,4 +140,26 @@ void MainWindow::on_mDNSupdate_pressed()
     createBrowser();
 }
 
+
+
+void MainWindow::on_colorPushButton_clicked()
+{
+    if (colorDialog != nullptr){
+        delete colorDialog;
+        colorDialog = nullptr;
+    }
+
+    colorDialog = new QColorDialog(this);
+    connect(colorDialog, &QColorDialog::colorSelected, [=](const QColor &color){
+        onOnColorChanged(color);
+    });
+//    connect(colorDialog, &QColorDialog::currentColorChanged, [=](const QColor &color){
+//        onOnColorChanged(color);
+//    });
+
+    QColor color = QColor();
+    color.setHsv(100, 255, 100);
+    colorDialog->setCurrentColor(color);
+    colorDialog->show();
+}
 

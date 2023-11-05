@@ -137,6 +137,16 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="colorPushButton">
+            <property name="text">
+             <string>Color</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QComboBox" name="comboBox"/>
           </item>
          </layout>
