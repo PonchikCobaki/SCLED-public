@@ -20,7 +20,7 @@ HEADERS += \
 FORMS += \
     mainwindow.ui
 
-
+win32:RC_FILE = file.rc
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -39,4 +39,4 @@ else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/li
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/qmdnsengined.lib
 
 RESOURCES += \
-  myFile.qrc
+  icons.qrc

@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file>resurce/icon/icon-stand-by-off.png</file>
+        <file>resurce/icon/icon-stand-by-on.png</file>
+        <file>resurce/icon/app.png</file>
+    </qresource>
+</RCC>
