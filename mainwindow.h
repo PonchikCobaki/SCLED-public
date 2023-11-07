@@ -50,27 +50,65 @@ private slots:
 
     void on_selectedDeviceComboBox_currentTextChanged(const QString &arg1);
 
+//    void on_selectedDeviceComboBox_textActivated(const QString &arg1);
+
     void on_deviceSearch_clicked();
 
     void on_updateParameters_clicked();
 
+    void on_jsonSaveButton_clicked();
+
+    void on_jsonReadButton_clicked();
+
+    void on_fileClearButton_clicked();
+
+    void on_horizontalSliderHue_sliderReleased();
+
+    void on_horizontalSliderSaturation_sliderReleased();
+
+    void on_horizontalSliderValue_sliderReleased();
+
+    void on_onButton_clicked(bool checked);
+
+
+
+
+
+
+
 private:
+
     Ui::MainWindow *ui;
     QJsonDocument jsonDocDeviceParameters;
     QJsonObject jsonDeviceParameters;
     QJsonArray hsv;
+    QString state;
+
     void serviceSerachRestart();
     void serviceResolver(const QMdnsEngine::Service &service);
+
     void jsonParse(QString jsonString);
+    void resolveJsonParse();
+
+    void jsonFileWrite();
+    void jsonFileRead();
+
+    void saveServiceInfoInFile();
+    void readServiceInfoInFile();
+    void clearServiceInfoInFile();
 
     void requestParamsFromDevice();
     void updateParamsOnDevice();
-    QString getCurrentDeviceAddress();
 
+
+    QString getCurrentDeviceAddress();
     QString getHexHSVColor();
+
 
     void onOnColorChanged(const QColor &color);
 
+    void chekState();
     void currentDeviceComboUpdate();
+    void updateColorItemUi();
 };
 #endif // MAINWINDOW_H
