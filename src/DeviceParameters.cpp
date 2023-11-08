@@ -257,9 +257,9 @@ uint8_t APICLG::createJson(StaticJsonDocument<sizeJson> &jsonDoc)
   }
 
   JsonArray hsvParam = jsonDoc.createNestedArray("hsv");
-    hsvParam.add(deviceParam.hue / MAX_BRIGHTNESS * 255);
+    hsvParam.add(deviceParam.hue);
     hsvParam.add(deviceParam.sat);
-    hsvParam.add(deviceParam.val);
+    hsvParam.add(uint8_t(deviceParam.val / (float)MAX_BRIGHTNESS * 255.0));
 
   if (badBit){
     return 1;
