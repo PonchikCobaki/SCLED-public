@@ -30,10 +30,10 @@ void setup() {
 
   delay( 1000 ); // power-up safety delay
 
-  FastLED.addLeds<LED_TYPE, DATA_PIN, GRB>(leds, NUM_LEDS);
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
   FastLED.setCorrection(TypicalLEDStrip); // GRB ordering is typical
-  FastLED.setBrightness(255);
-  // FastLED.setMaxPowerInVoltsAndMilliamps(5, 1500);
+  // FastLED.setBrightness(255);
+  FastLED.setMaxPowerInVoltsAndMilliamps(LED_SUPPLE_VOLTAGE, LED_SUPPLE_CURRENT);
 
 
 #ifdef SAVE_EEPROM
@@ -121,6 +121,7 @@ void loop() {
       break;
 
     case APICLG::ProgramType::blink:
+      SmoothBlink(deviceParam.hue, deviceParam.sat, deviceParam.val, deviceParam.speed, 35);
     // to do
       break;
 
@@ -217,6 +218,7 @@ void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const 
     fill_solid(leds, NUM_LEDS, rgb);
     FastLED.show();
     FastLED.delay(1000/speed);
+    APICLG::serverUpdate();
   }
   yield();
   for (float i = 0; (i <= val) & (val - i > step); i+= step){
@@ -225,6 +227,7 @@ void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const 
     fill_solid(leds, NUM_LEDS, rgb);
     FastLED.show();
     FastLED.delay(1000/speed);
+    APICLG::serverUpdate();
   }
   rgb = 0;
   fill_solid(leds, NUM_LEDS, rgb);

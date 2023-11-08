@@ -1,7 +1,7 @@
 role: begin/ middle/ end
 type-gate: strip/ rect/ hex/ triangle/ circle
 offset-voltage: -256 to 255 (+- 250mV at range 0-1V)
-state: off/ run/ pause/ low_batt
+state: off/ run/ pause/ low_battry
 program-type: solid/ gradient/ blink/ wave
 gradient-number: 0-43
 blend-type: noblend/ linearblend/ linearblend-nowarp

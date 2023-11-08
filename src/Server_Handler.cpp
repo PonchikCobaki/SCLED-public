@@ -36,21 +36,33 @@ uint8_t APICLG::mDNSServerInit(void) {
   //   the fully-qualified domain name is "esp8266.local"
   // - second argument is the IP address to advertise
   //   we send our IP address on the WiFi network
-  uint16_t chipId = ESP.getChipId();
-  String name = "esp8266_" + String(chipId);
-  DEBUGMLN("Device name: " + name);
-  if (!MDNS.begin(name)) {
+
+  String deviceBaseName = "CLED"; 
+  String uniqueName = deviceBaseName  + ESP.getChipId();
+  
+  // Add service to MDNS-SD
+  MDNSResponder::hMDNSService hMDNSService = MDNS.addService(uniqueName.c_str(), "http", "tcp", 80);
+
+  //MDNS.removeService(pcName, "http", "tcp");
+  
+
+  // MDNS.setServiceName(pcHostDomain, "CLED");
+  MDNS.addServiceTxt(hMDNSService, "FlashChipId", String(ESP.getFlashChipId()).c_str());
+  MDNS.addServiceTxt(hMDNSService, "MAC", String(WiFi.macAddress()).c_str());
+
+
+  DEBUGMLN("Device unique name: " + uniqueName);
+  if (!MDNS.begin(uniqueName)) {
     DEBUGMLN("Error setting up MDNS responder!");
     return 0;
   }
   DEBUGMLN("mDNS responder started");
 
+
   // Start TCP (HTTP) server
   APICLG::connectedServer.begin();
   DEBUGMLN("TCP server started");
 
-  // Add service to MDNS-SD
-  MDNS.addService("http", "tcp", 80);
 
   return 1;
 }
@@ -58,6 +70,8 @@ uint8_t APICLG::mDNSServerInit(void) {
 APICLG::RequestType APICLG::serverUpdate() {
 
   MDNS.update();
+
+  // MDNS.announce();
 
   // Check if a client has connected
   
@@ -70,7 +84,7 @@ APICLG::RequestType APICLG::serverUpdate() {
 
     uint8_t attemp = 5;
     
-    for (uint8_t i = 0; i < attemp || (client.connected() && !client.available()); i++ ) {
+    for (uint8_t i = 0; i < attemp && (client.connected() && !client.available()); i++ ) {
       yield();
       if (i == attemp) {
         client.stop();
@@ -78,7 +92,7 @@ APICLG::RequestType APICLG::serverUpdate() {
         return RequestType::ERROR;
       }
     }
-    
+
 
     // Read the first line of HTTP request
     String req = client.readStringUntil('\r');

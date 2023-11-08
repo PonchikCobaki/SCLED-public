@@ -42,6 +42,9 @@ namespace APICLG {
   struct DeviceParameters {
     public: 
 
+    // char ssid[64];
+    // char stapsk[64];
+
     // device parameters
     uint8_t role = middle;
     uint8_t typeGate = strip;

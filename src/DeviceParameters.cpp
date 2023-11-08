@@ -131,6 +131,8 @@ uint8_t APICLG::updateDeviceParameters(const APICLG::PathParameters &param)
       uint8_t h = (hsvHex >> 16) & 0xFF;
       uint8_t s = (hsvHex >> 8) & 0xFF;
       uint8_t v = hsvHex & 0xFF;
+
+      v = v / 255.0 * MAX_BRIGHTNESS; // brigtness limitation
       // DEBUGMLN("hsv: " + String(h) + " " + String(s) + " " + String(v));
       if (deviceParam.hue != h || deviceParam.sat != s || deviceParam.val != v){
         deviceParam.hue = h;
@@ -163,41 +165,41 @@ uint8_t APICLG::createJson(StaticJsonDocument<sizeJson> &jsonDoc)
 
   bool badBit = false;
 
-  if (deviceParam.role == APICLG::RoleType::begin){
-    jsonDoc["role"] = "begin";
-  }
-  else if (deviceParam.role == APICLG::RoleType::middle){
-    jsonDoc["role"] = "middle";
-  }
-  else if (deviceParam.role == APICLG::RoleType::end){
-    jsonDoc["role"] = "end";
-  }
-  else{
-    DEBUGMLN("Invalid role");
-    badBit = true;
-  }
+  // if (deviceParam.role == APICLG::RoleType::begin){
+  //   jsonDoc["role"] = "begin";
+  // }
+  // else if (deviceParam.role == APICLG::RoleType::middle){
+  //   jsonDoc["role"] = "middle";
+  // }
+  // else if (deviceParam.role == APICLG::RoleType::end){
+  //   jsonDoc["role"] = "end";
+  // }
+  // else{
+  //   DEBUGMLN("Invalid role");
+  //   badBit = true;
+  // }
 
-  if (deviceParam.typeGate == APICLG::TypeGate::strip){
-    jsonDoc["type-gate"] = "strip";
-  }
-  else if (deviceParam.typeGate == APICLG::TypeGate::rect){
-    jsonDoc["type-gate"] = "rect";
-  }
-  else if (deviceParam.typeGate == APICLG::TypeGate::triangle){
-    jsonDoc["type-gate"] = "triangle";
-  }
-  else if (deviceParam.typeGate == APICLG::TypeGate::hex){
-    jsonDoc["type-gate"] = "hex";
-  }
-  else if (deviceParam.typeGate == APICLG::TypeGate::circle){
-    jsonDoc["type-gate"] = "circle";
-  }
-  else{
-    DEBUGMLN("Invalid role");
-    badBit = true;
-  }
+  // if (deviceParam.typeGate == APICLG::TypeGate::strip){
+  //   jsonDoc["type-gate"] = "strip";
+  // }
+  // else if (deviceParam.typeGate == APICLG::TypeGate::rect){
+  //   jsonDoc["type-gate"] = "rect";
+  // }
+  // else if (deviceParam.typeGate == APICLG::TypeGate::triangle){
+  //   jsonDoc["type-gate"] = "triangle";
+  // }
+  // else if (deviceParam.typeGate == APICLG::TypeGate::hex){
+  //   jsonDoc["type-gate"] = "hex";
+  // }
+  // else if (deviceParam.typeGate == APICLG::TypeGate::circle){
+  //   jsonDoc["type-gate"] = "circle";
+  // }
+  // else{
+  //   DEBUGMLN("Invalid role");
+  //   badBit = true;
+  // }
 
-  jsonDoc["offset-voltage"] = deviceParam.offsetVoltage;
+  // jsonDoc["offset-voltage"] = deviceParam.offsetVoltage;
 
   if (deviceParam.state == APICLG::StateType::off){
     jsonDoc["state"] = "off";
@@ -255,9 +257,9 @@ uint8_t APICLG::createJson(StaticJsonDocument<sizeJson> &jsonDoc)
   }
 
   JsonArray hsvParam = jsonDoc.createNestedArray("hsv");
-    hsvParam.add(String(deviceParam.hue));
-    hsvParam.add(String(deviceParam.sat));
-    hsvParam.add(String(deviceParam.val));
+    hsvParam.add(deviceParam.hue / MAX_BRIGHTNESS * 255);
+    hsvParam.add(deviceParam.sat);
+    hsvParam.add(deviceParam.val);
 
   if (badBit){
     return 1;

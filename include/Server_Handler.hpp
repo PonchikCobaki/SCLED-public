@@ -7,6 +7,7 @@
 
 #include "API_Parser.hpp"
 
+extern char* pcHostDomain;   
 
 namespace APICLG{
   extern const char* ssid;
@@ -23,3 +24,4 @@ namespace APICLG{
 }
 
 extern APICLG::DeviceParameters deviceParam;
+
