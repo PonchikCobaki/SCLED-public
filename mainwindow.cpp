@@ -115,11 +115,15 @@ void MainWindow::serviceResolver(const QMdnsEngine::Service &service)
 
 void MainWindow::requestParamsFromDevice()
 {
-    // Get
-    QNetworkRequest request;
-    request.setUrl(QUrl::fromUserInput(getCurrentDeviceAddress()));
+    QString addres = getCurrentDeviceAddress();
 
-    manager->get(request);
+    if (addres != ""){
+        // Get
+        QNetworkRequest request;
+        request.setUrl(QUrl::fromUserInput(addres));
+
+        manager->get(request);
+    }
 }
 
 void MainWindow::updateParamsOnDevice()
@@ -164,12 +168,21 @@ QString MainWindow::getCurrentDeviceAddress()
     if (devicesMap.isEmpty() || ui->selectedDeviceComboBox->currentIndex() == -1)
         return "";
 
-    QString serviceName = reverseNameMap.value(ui->selectedDeviceComboBox->currentText());
+    QString currentDev = ui->selectedDeviceComboBox->currentText();
 
-    QHostAddress address = devicesMap.value(serviceName);
-    qDebug() << "address" << address;
+        if (reverseNameMap.contains(currentDev)){
 
-    return address.toString();
+        QString serviceName = reverseNameMap.value(currentDev);
+
+        QHostAddress address = devicesMap.value(serviceName);
+        qDebug() << "address" << address;
+
+        return address.toString();
+
+    } else {
+        qDebug() << "Error non-existent device" << currentDev;
+        return "";
+    }
 }
 
 QString MainWindow::getHexHSVColor()
