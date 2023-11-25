@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#include "gradientPaletts.cpp"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -8,11 +8,27 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->gradientNameComboBox->addItems(gradients);
 
-    readServiceInfoInFile();
+//    ui->colorPushButton->setStyleSheet("background-color: white;");
+
+
+
+    deactivateColorControls();
+
+//    ui->ColorSettingsGroupBox->setEnabled(0);
+
+    servicesFile.setBuffer(&servicesData);
+    servicesFile.readServicesData();
+
     serviceSerachRestart();
+
     currentDeviceComboUpdate();
-    chekState();
+    checkState();
+
+    setEnabledSolidMode();
+
+//    checkMode();
 
     manager = new QNetworkAccessManager(this);
     connect(manager,
@@ -27,7 +43,8 @@ MainWindow::MainWindow(QWidget *parent)
                 QString answer = reply->readAll();
                 if (!answer.isEmpty()){
                     jsonParse(answer);
-                    chekState();
+                    checkState();
+                    checkMode();
                     ui->plainTextEdit->clear();
 //                    ui->plainTextEdit->appendPlainText(getCurrentDeviceAddress());
                     ui->plainTextEdit->appendPlainText(answer);
@@ -39,9 +56,11 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 
-
 MainWindow::~MainWindow()
 {
+    delete cache;
+    delete browser;
+
     delete ui;
 }
 
@@ -90,15 +109,15 @@ void MainWindow::serviceSerachRestart()
 
 void MainWindow::serviceResolver(const QMdnsEngine::Service &service)
 {
+//    qDebug() << "service.hostname() " << service.hostname();
     QMdnsEngine::Resolver *resolver = new QMdnsEngine::Resolver(&server, service.hostname(), cache);
     QObject::connect(resolver, &QMdnsEngine::Resolver::resolved,
                      [=](const QHostAddress &address) {
                          qDebug() << "resolved to" << address;
-                         devicesMap.insert(service.name(), address);
-                         if (!nameMap.contains(service.name())){
-                             QString name = QString("Device " + QString::number(nameMap.size() + 1));
-                             nameMap.insert(service.name(), name);
-                             reverseNameMap.insert(name, service.name());
+        servicesData.insertDevice(service.name(), address);
+                         if (!servicesData.getUName().contains(service.name())){
+                             QString name = QString("Device " + QString::number(servicesData.getUName().size() + 1));
+                             servicesData.insertUName(service.name(), name);
                              currentDeviceComboUpdate();
 //                             saveServiceInfoInFile();
 
@@ -113,6 +132,47 @@ void MainWindow::serviceResolver(const QMdnsEngine::Service &service)
 
 }
 
+//void MainWindow::serviceResolver(const QString &serviceName)
+//{
+
+//    QMdnsEngine::Server server2;
+//    QMdnsEngine::Resolver resolver2(&server2, serviceName.toUtf8());
+
+//    QString host = "local.";
+//    QMdnsEngine::Service service2;
+//    service2.setName(serviceName.toUtf8());
+//    service2.setHostname(".local.");
+//    service2.setType("_http._tcp");
+
+//    QObject::connect(&resolver2, &QMdnsEngine::Resolver::resolved,
+//                     [=](const QMdnsEngine::Service &serviceD) {
+//            qDebug() << "IP Address:" << serviceD.attributes();
+//    });
+
+//    resolver2.resolved(servicesData.getServices().value(serviceName));
+
+//    QByteArray hostname = (serviceName + ".local.").toLocal8Bit();
+//    QMdnsEngine::Resolver *resolver = new QMdnsEngine::Resolver(&server, hostname, cache);
+//    QObject::connect(resolver, &QMdnsEngine::Resolver::resolved,
+//                     [=](const QHostAddress &address) {
+//                         qDebug() << "resolved to" << address;
+//                         servicesData.insertDevice(serviceName, address);
+//                         if (!servicesData.getUName().contains(serviceName)){
+//                             QString name = QString("Device " + QString::number(servicesData.getUName().size() + 1));
+//                             servicesData.insertUName(serviceName, name);
+//                             currentDeviceComboUpdate();
+//                             //                             saveServiceInfoInFile();
+
+//                         }
+
+//                         if (jsonDocDeviceParameters.isEmpty()){
+//                             requestParamsFromDevice();
+//                         }
+
+//                         resolver->deleteLater();
+//                     });
+//}
+
 void MainWindow::requestParamsFromDevice()
 {
     QString addres = getCurrentDeviceAddress();
@@ -126,63 +186,62 @@ void MainWindow::requestParamsFromDevice()
     }
 }
 
-void MainWindow::updateParamsOnDevice()
-{
-    //    QUrlQuery postData;
-    //    postData.addQueryItem("state", "run");
-    //    postData.addQueryItem("hsv", getHexHSVColor());
+void MainWindow::updateParamsOnDevice(QUrlQuery query)
+{  
+    QString curAddress = getCurrentDeviceAddress();
 
-    //    QNetworkRequest request(QUrl::fromUserInput(getCurrentDeviceAddress() + "/api"));
-    ////    request.setHeader(QNetworkRequest::ContentTypeHeader,
-    ////                      "application/x-www-form-urlencoded");
+    if (curAddress != ""){
+        QNetworkRequest request;
 
-    //    manager->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
+        QUrl url = QUrl::fromUserInput(curAddress + "/api");
+//        QUrlQuery query;
+//        query.addQueryItem("state", state);
+//        query.addQueryItem("hsv", getHexHSVColor());
 
+        url.setQuery(query.query());
 
-    ////    QUrl url = QUrl::fromUserInput(getCurrentDeviceAddress() + "/api");
-
-    ////    url.setQuery(query.query());
-    ////    request.setUrl(url);
-    ///
-    ///
-
-
-    QNetworkRequest request;
-
-    QUrl url = QUrl::fromUserInput(getCurrentDeviceAddress() + "/api");
-    QUrlQuery query;
-    query.addQueryItem("state", state);
-    query.addQueryItem("hsv", getHexHSVColor());
-    url.setQuery(query.query());
-
-    request.setUrl(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-//    manager->get(request);
-    manager->post(request, QByteArray());
-
+        request.setUrl(url);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+        manager->post(request, QByteArray());
+    }
 
 }
 
 QString MainWindow::getCurrentDeviceAddress()
 {
-    if (devicesMap.isEmpty() || ui->selectedDeviceComboBox->currentIndex() == -1)
+
+    if (ui->selectedDeviceComboBox->currentIndex() == -1)
+    {
+        qDebug() << "Error missing services";
         return "";
+    }
 
-    QString currentDev = ui->selectedDeviceComboBox->currentText();
+    QString curUName = ui->selectedDeviceComboBox->currentText();
 
-        if (reverseNameMap.contains(currentDev)){
+    if (servicesData.getUName().contains(curUName))
+    {
+        qDebug() << "Error non-existent device" << curUName;
+        return "";
+    }
 
-        QString serviceName = reverseNameMap.value(currentDev);
+    // TO DO !!! если существует Uname и сервер доступен (были данные на счет его API) то отдаем адрес
 
-        QHostAddress address = devicesMap.value(serviceName);
+    QString curService = servicesData.getRevUName().value(curUName);
+
+    if (servicesData.getServices().contains(curService)){
+
+        QHostAddress address = servicesData.getServices().value(curService);
         qDebug() << "address" << address;
 
         return address.toString();
 
     } else {
-        qDebug() << "Error non-existent device" << currentDev;
+        qDebug() << "Error missing address";
+        serviceSerachRestart();
+
         return "";
     }
+
 }
 
 QString MainWindow::getHexHSVColor()
@@ -246,92 +305,16 @@ void MainWindow::resolveJsonParse()
 
     QPalette Pal(palette());
     Pal.setColor(QPalette::Button, color.rgb());
-    ui->colorPushButton->setAutoFillBackground(true);
-    ui->colorPushButton->setPalette(Pal);
+//    ui->colorPushButton->setAutoFillBackground(true);
+//    ui->colorPushButton->setPalette(Pal);
+
+    QString qss = QString("QPushButton {background-color: %1;"
+                          "border-radius: 10px;"
+                          "}").arg(color.name());
+    ui->colorPushButton->setStyleSheet(qss);
+
 }
 
-void MainWindow::jsonFileWrite()
-{
-    QFile file("service_data.json");
-    if (file.open(QIODevice::WriteOnly)) {
-        file.write(jsonDocDeviceParameters.toJson());
-        file.close();
-    }
-}
-
-void MainWindow::jsonFileRead()
-{
-    QFile file("service_data.json");
-    if (file.open(QIODevice::ReadOnly)) {
-        QByteArray jsonData = file.readAll();
-        jsonDocDeviceParameters = QJsonDocument::fromJson(jsonData);
-        file.close();
-        resolveJsonParse();
-    }
-}
-
-void MainWindow::saveServiceInfoInFile()
-{
-    QJsonObject jsonServiceName;
-
-    auto ipId = devicesMap.begin();
-    auto userNameId = nameMap.begin();
-    while (true) {
-        if (ipId == devicesMap.end())
-            break;
-        QJsonArray  jsonServiceInfo;
-        jsonServiceInfo.append( ipId.value().toString() );
-        jsonServiceInfo.append( userNameId.value() );
-        jsonServiceName.insert(ipId.key(), jsonServiceInfo);
-
-        ++ipId; ++userNameId;
-    }
-
-    QJsonDocument jsonDoc(jsonServiceName);
-
-    QFile file("service_data.json");
-    if (file.open(QIODevice::WriteOnly)) {
-        file.write(jsonDoc.toJson());
-        file.close();
-    }
-}
-
-void MainWindow::readServiceInfoInFile()
-{
-    QFile file("service_data.json");
-    if (file.open(QIODevice::ReadOnly)) {
-        QByteArray rawJsonData = file.readAll();
-        file.close();
-
-        QJsonObject jsonServiceName = QJsonDocument::fromJson(rawJsonData).object();
-
-        for (auto it = jsonServiceName.begin(); it != jsonServiceName.end(); ++it) {
-            QString serviceName = it.key();
-            QString deviceIp = it.value().toArray().at(0).toString();
-            QString userName = it.value().toArray().at(1).toString();
-
-            devicesMap.insert(serviceName, QHostAddress(deviceIp));
-            nameMap.insert(serviceName, userName);
-            reverseNameMap.insert(userName, serviceName);
-
-        }
-
-        qDebug() << "read Service data " ;
-        qDebug() << devicesMap;
-        qDebug() << nameMap;
-        qDebug() << reverseNameMap;
-    }
-}
-
-void MainWindow::clearServiceInfoInFile()
-{
-    QFile file("service_data.json");
-
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        file.resize(0);
-        file.close();
-    }
-}
 
 void MainWindow::onOnColorChanged(const QColor &color)
 {
@@ -343,13 +326,17 @@ void MainWindow::onOnColorChanged(const QColor &color)
 
 
     updateColorItemUi();
-    updateParamsOnDevice();
+
+    QUrlQuery query;
+    query.addQueryItem("state", state);
+    query.addQueryItem("hsv", getHexHSVColor());
+
+    updateParamsOnDevice(query);
     // todo add set spinboxes or sliders
 }
 
-void MainWindow::chekState()
+void MainWindow::checkState()
 {
-
     QString s = jsonDeviceParameters.value("state").toString();
     state = s;
     if (s == "run"){
@@ -360,10 +347,19 @@ void MainWindow::chekState()
     }
 }
 
+void MainWindow::checkMode()
+{
+    QString mode = jsonDeviceParameters.value("program-type").toString();
+    mode = mode[0].toUpper() + mode.mid(1).toLower();;
+    ui->modeComboBox->setCurrentText(mode);
+    ui->modeComboBox->activated(ui->modeComboBox->currentIndex());
+    qDebug() << "mode " << mode;
+}
+
 void MainWindow::currentDeviceComboUpdate()
 {
     ui->selectedDeviceComboBox->clear();
-    for (const QString &userDeviceName : reverseNameMap.keys()) {
+    for (const QString &userDeviceName : servicesData.getRevUName().keys()) {
         ui->selectedDeviceComboBox->addItem(userDeviceName);
     }
 
@@ -383,22 +379,73 @@ void MainWindow::updateColorItemUi()
 
     qDebug() << "update color" << color;
 
-    QPalette Pal(palette());
-    Pal.setColor(QPalette::Button, color.rgb());
-    ui->colorPushButton->setAutoFillBackground(true);
-    ui->colorPushButton->setPalette(Pal);
-
+    QString qss = QString("QPushButton {background-color: %1;"
+                          "border-radius: 10px;"
+                          "}").arg(color.name());
+    ui->colorPushButton->setStyleSheet(qss);
 
 
     ui->horizontalSliderHue->setSliderPosition(h);
     ui->horizontalSliderSaturation->setSliderPosition(s / 255.0 * 100.0);
     ui->horizontalSliderValue->setSliderPosition(v / 255.0 * 100.0);
 
-    ui->spinBoxHue->setValue(h);
-    ui->spinBoxSaturation->setValue(s / 255.0 * 100.0);
-    ui->spinBoxValue->setValue(v / 255.0 * 100.0);
+//    ui->spinBoxHue->setValue(h);
+//    ui->spinBoxSaturation->setValue(s / 255.0 * 100.0);
+//    ui->spinBoxValue->setValue(v / 255.0 * 100.0);
 
 
+}
+
+void MainWindow::deactivateColorControls()
+{
+    ui->horizontalSliderHue->setEnabled(false);
+    ui->horizontalSliderSaturation->setEnabled(false);
+    ui->horizontalSliderValue->setEnabled(false);
+
+    ui->spinBoxHue->setEnabled(false);
+    ui->spinBoxSaturation->setEnabled(false);
+    ui->spinBoxValue->setEnabled(false);
+
+//    ui->modeComboBox->setEnabled(false);
+    ui->colorPushButton->setEnabled(false);
+    ui->gradientNameComboBox->setEnabled(false);
+
+    ui->horizontalSliderSpeed->setEnabled(false);
+    ui->spinBoxSpeed->setEnabled(false);
+
+    ui->horizontalSliderScale->setEnabled(false);
+    ui->spinBoxScale->setEnabled(false);
+}
+
+void MainWindow::setEnabledSolidMode()
+{
+    ui->horizontalSliderHue->setEnabled(true);
+    ui->horizontalSliderSaturation->setEnabled(true);
+    ui->horizontalSliderValue->setEnabled(true);
+
+    ui->spinBoxHue->setEnabled(true);
+    ui->spinBoxSaturation->setEnabled(true);
+    ui->spinBoxValue->setEnabled(true);
+
+    //    ui->modeComboBox->setEnabled(false);
+    ui->colorPushButton->setEnabled(true);
+
+
+}
+
+void MainWindow::setEnabledGradientMode()
+{
+//    ui->modeComboBox->setEnabled(true);
+    ui->horizontalSliderValue->setEnabled(true);
+    ui->spinBoxValue->setEnabled(true);
+
+    ui->gradientNameComboBox->setEnabled(true);
+
+    ui->horizontalSliderSpeed->setEnabled(true);
+    ui->spinBoxSpeed->setEnabled(true);
+
+    ui->horizontalSliderScale->setEnabled(true);
+    ui->spinBoxScale->setEnabled(true);
 }
 
 
@@ -448,9 +495,9 @@ void MainWindow::on_selectedDeviceComboBox_currentTextChanged(const QString &arg
 {
     qDebug() << "currentTextChanged: " << arg1;
     qDebug() << "combo count: " << ui->selectedDeviceComboBox->count();
-    qDebug() << "device count: " << devicesMap.size();
+    qDebug() << "device count: " << servicesData.getServices().size();
 
-    if (ui->selectedDeviceComboBox->count() == devicesMap.size()){
+    if (ui->selectedDeviceComboBox->count() == servicesData.getServices().size()){
         requestParamsFromDevice();
     }
 }
@@ -459,9 +506,9 @@ void MainWindow::on_selectedDeviceComboBox_currentTextChanged(const QString &arg
 //{
 //    qDebug() << "textActivated: " << arg1;
 //    qDebug() << "combo count: " << ui->selectedDeviceComboBox->count();
-//    qDebug() << "device count: " << devicesMap.size();
+//    qDebug() << "device count: " << servicesData.getDevices().size();
 
-//    if (ui->selectedDeviceComboBox->count() == devicesMap.size()){
+//    if (ui->selectedDeviceComboBox->count() == servicesData.getDevices().size()){
 //        requestParamsFromDevice();
 //    }
 //}
@@ -485,54 +532,60 @@ void MainWindow::on_updateParameters_clicked()
 
 void MainWindow::on_jsonSaveButton_clicked()
 {
-    saveServiceInfoInFile();
-    qDebug() << "write Service Info \n" << jsonDeviceParameters;
+    servicesFile.saveServicesData();
+//    saveServiceInfoInFile();
+    qDebug() << "write Service Info";
 }
 
 
 void MainWindow::on_jsonReadButton_clicked()
 {
-    readServiceInfoInFile();
-    qDebug() << "read Service Info \n" << devicesMap;
-    qDebug() << "read Service Info \n" << nameMap;
+    servicesFile.readServicesData();
+    qDebug() << "read Service Info \n" << servicesData.getServices();
+    qDebug() << "read Service Info \n" << servicesData.getUName();
     currentDeviceComboUpdate();
     requestParamsFromDevice();
 }
 
 void MainWindow::on_fileClearButton_clicked()
 {
-    clearServiceInfoInFile();
-    devicesMap.clear();
-    nameMap.clear();
-    reverseNameMap.clear();
-    currentDeviceComboUpdate();
+//    servicesFile.clearServicesData();
+//    servicesData.getServices().clear();
+//    servicesData.getUName().clear();
+//    servicesData.getRevUName().clear();
+//    currentDeviceComboUpdate();
 }
 
 
-void MainWindow::on_horizontalSliderHue_sliderReleased()
+//void MainWindow::on_horizontalSliderHue_valueChanged(int value)
+//{
+//    hsv[0] = int((value / 360.0 * 255.0));
+//    updateColorItemUi();
+
+//    QUrlQuery query;
+//    query.addQueryItem("hsv", getHexHSVColor());
+////    updateParamsOnDevice(query);
+//}
+
+//void MainWindow::on_horizontalSliderSaturation_valueChanged(int value)
+//{
+//    hsv[1] = int((value / 100.0 * 255.0));
+//    updateColorItemUi();
+
+//    QUrlQuery query;
+//    query.addQueryItem("hsv", getHexHSVColor());
+////    updateParamsOnDevice(query);
+//}
+
+
+void MainWindow::on_horizontalSliderValue_valueChanged(int value)
 {
-    int value = ui->horizontalSliderHue->value();
-    hsv[0] = int((value / 360.0 * 255.0));
-    updateColorItemUi();
-    updateParamsOnDevice();
-}
-
-
-void MainWindow::on_horizontalSliderSaturation_sliderReleased()
-{
-    int value = ui->horizontalSliderSaturation->value();
-    hsv[1] = int((value / 100.0 * 255.0));
-    updateColorItemUi();
-    updateParamsOnDevice();
-}
-
-
-void MainWindow::on_horizontalSliderValue_sliderReleased()
-{
-    int value = ui->horizontalSliderValue->value();
     hsv[2] = int((value / 100.0 * 255.0));
-    updateColorItemUi();
-    updateParamsOnDevice();
+//    updateColorItemUi();
+
+    QUrlQuery query;
+    query.addQueryItem("hsv", getHexHSVColor());
+    updateParamsOnDevice(query);
 }
 
 
@@ -543,11 +596,91 @@ void MainWindow::on_onButton_clicked(bool checked)
     } else {
         state = "off";
     }
-    updateParamsOnDevice();
+
+    QUrlQuery query;
+    query.addQueryItem("state", state);
+    updateParamsOnDevice(query);
+
 }
 
 
+void MainWindow::on_modeComboBox_activated(int index)
+{
+    qDebug() << "mode combo index " << index;
+    QUrlQuery query;
 
+    switch (index) {
+    case 0: // Solid
+        deactivateColorControls();
+        setEnabledSolidMode();
+
+        query.addQueryItem("program-type", "solid");
+        updateParamsOnDevice(query);
+
+        break;
+
+    case 1: // Blink
+
+        query.addQueryItem("program-type", "blink");
+        updateParamsOnDevice(query);
+
+        break;
+
+    case 2: // Gradient
+    {
+        deactivateColorControls();
+        setEnabledGradientMode();
+
+        query.addQueryItem("program-type", "gradient");
+
+        QString curGradient = ui->gradientNameComboBox->currentText();
+            if (gradients.contains(curGradient)){
+                int curGradientInd = gradients.indexOf(curGradient);
+                query.addQueryItem("gradient-number", QString::number(curGradientInd));
+                qDebug() << QString::number(curGradientInd);
+            }
+
+        updateParamsOnDevice(query);
+
+        break;
+    }
+    case 3: // Sunrise
+
+
+        break;
+
+    default:
+        deactivateColorControls();
+        break;
+    }
+}
+
+
+void MainWindow::on_gradientNameComboBox_activated(int index)
+{
+    QUrlQuery query;
+    query.addQueryItem("gradient-number", QString::number(index));
+    updateParamsOnDevice(query);
+}
+
+
+void MainWindow::on_horizontalSliderScale_valueChanged(int value)
+{
+    qDebug() << "gradient-scale " << value;
+    QUrlQuery query;
+    query.addQueryItem("gradient-scale", QString::number(value));
+    updateParamsOnDevice(query);
+
+}
+
+
+void MainWindow::on_horizontalSliderSpeed_valueChanged(int value)
+{
+    qDebug() << "speed " << value;
+    QUrlQuery query;
+    query.addQueryItem("speed", QString::number(value));
+    updateParamsOnDevice(query);
+}
 
 
 

@@ -20,6 +20,10 @@
 #include <browser.h>
 #include <resolver.h>
 
+#include "serviceParemeters.h"
+#include "deviceDataFiles.h"
+
+
 Q_DECLARE_METATYPE(QMdnsEngine::Service)
 
 QT_BEGIN_NAMESPACE
@@ -38,19 +42,21 @@ public:
     QMdnsEngine::Cache   *cache = nullptr;
     QMdnsEngine::Browser *browser = nullptr;
 
-    QMap<QString, QHostAddress> devicesMap; // Service name, device IP
-    QMap<QString, QString> nameMap; // Service name, User device name
-    QMap<QString, QString> reverseNameMap; // User device name,  Service name
+    ServiceParemeters servicesData;
+    DeviceDataFile servicesFile;
+
+//    QMap<QString, QHostAddress> devicesMap; // Service name, device IP
+//    QMap<QString, QString> nameMap; // Service name, User device name
+//    QMap<QString, QString> reverseNameMap; // User device name,  Service name
 
     QNetworkAccessManager *manager = nullptr;
     QNetworkAccessManager *postManager = nullptr;
     QColorDialog          *colorDialog = nullptr;
+
 private slots:
     void on_colorPushButton_clicked();
 
     void on_selectedDeviceComboBox_currentTextChanged(const QString &arg1);
-
-//    void on_selectedDeviceComboBox_textActivated(const QString &arg1);
 
     void on_deviceSearch_clicked();
 
@@ -62,17 +68,19 @@ private slots:
 
     void on_fileClearButton_clicked();
 
-    void on_horizontalSliderHue_sliderReleased();
-
-    void on_horizontalSliderSaturation_sliderReleased();
-
-    void on_horizontalSliderValue_sliderReleased();
+//    void on_horizontalSliderHue_valueChanged(int value);
+//    void on_horizontalSliderSaturation_valueChanged(int value);
+    void on_horizontalSliderValue_valueChanged(int value);
 
     void on_onButton_clicked(bool checked);
 
+    void on_modeComboBox_activated(int index);
 
+    void on_gradientNameComboBox_activated(int index);
 
+    void on_horizontalSliderScale_valueChanged(int value);
 
+    void on_horizontalSliderSpeed_valueChanged(int value);
 
 
 
@@ -86,19 +94,13 @@ private:
 
     void serviceSerachRestart();
     void serviceResolver(const QMdnsEngine::Service &service);
+//    void serviceResolver(const QString &serviceName);
 
     void jsonParse(QString jsonString);
     void resolveJsonParse();
 
-    void jsonFileWrite();
-    void jsonFileRead();
-
-    void saveServiceInfoInFile();
-    void readServiceInfoInFile();
-    void clearServiceInfoInFile();
-
     void requestParamsFromDevice();
-    void updateParamsOnDevice();
+    void updateParamsOnDevice(QUrlQuery query);
 
 
     QString getCurrentDeviceAddress();
@@ -107,8 +109,16 @@ private:
 
     void onOnColorChanged(const QColor &color);
 
-    void chekState();
+
     void currentDeviceComboUpdate();
     void updateColorItemUi();
+
+    void checkState();
+    void checkMode();
+
+    void deactivateColorControls();
+    void setEnabledSolidMode();
+    void setEnabledGradientMode();
+
 };
 #endif // MAINWINDOW_H
