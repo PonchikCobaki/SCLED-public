@@ -56,8 +56,9 @@ String APICLG::pathFinding(const String &req)
 }
 
 
-// Format example: /api?color=1&intensity=30&role=start
-// POST http://192.168.0.1/api?role=begin&type-gate=rect&state=run&program-type=solid&speed=4&hsv=fc0115
+/*  Format example: /api?color=1&intensity=30&role=start
+    return key and value
+ */
 uint8_t APICLG::parsePath(const String &path)
 {
   
@@ -84,7 +85,8 @@ uint8_t APICLG::parsePath(const String &path)
           if(APICLG::updateDeviceParameters(param) == 0){
             // save to device parameters
             memoryDeviceParam.update();
-          }
+          } else  return 1;
+          
         }
         else {
           DEBUGMLN("Invalid param in parse path: " + paramStr);
@@ -112,6 +114,7 @@ uint8_t APICLG::parseParam(APICLG::PathParameters &param, const String &str)
   int delimiter = str.indexOf('=');
   if (delimiter != -1)
   {
+    DEBUGMLN("Param string: " + str);
     param = {
         str.substring(0, delimiter),
         str.substring(delimiter + 1, str.length()) 
@@ -121,7 +124,7 @@ uint8_t APICLG::parseParam(APICLG::PathParameters &param, const String &str)
   }
   else
   {
-    DEBUGMLN("Invalidparam without assignment \"=\": " + str);
+    DEBUGMLN("Invalid param without assignment \"=\": " + str);
     return 1;
   }
 }

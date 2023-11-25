@@ -9,6 +9,7 @@ speed: 0-255
 pradient-scale: 0-255
 hsv: ffffff  color format(hue, saturation, brightness)(255,255,255)
 
+
 Json example {
     "role": "middle",
     "type-gate": "strip",

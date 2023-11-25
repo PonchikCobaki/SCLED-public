@@ -12,9 +12,11 @@ namespace APICLG {
   // TCP server at port 80 will respond to HTTP requests
   WiFiServer connectedServer(80);
 
+  MDNSResponder::hMDNSService hMDNSService;
+
 }
 
-uint8_t APICLG::mDNSServerInit(void) {
+uint8_t APICLG::serverInit(void) {
   // Connect to WiFi network
   WiFi.mode(WIFI_STA);
   WiFi.begin(APICLG::ssid, APICLG::password);
@@ -37,11 +39,11 @@ uint8_t APICLG::mDNSServerInit(void) {
   // - second argument is the IP address to advertise
   //   we send our IP address on the WiFi network
 
-  String deviceBaseName = "CLED"; 
+  String deviceBaseName = "SCLED"; 
   String uniqueName = deviceBaseName  + ESP.getChipId();
   
   // Add service to MDNS-SD
-  MDNSResponder::hMDNSService hMDNSService = MDNS.addService(uniqueName.c_str(), "http", "tcp", 80);
+  hMDNSService = MDNS.addService(uniqueName.c_str(), "http", "tcp", 80);
 
   //MDNS.removeService(pcName, "http", "tcp");
   
@@ -49,7 +51,7 @@ uint8_t APICLG::mDNSServerInit(void) {
   // MDNS.setServiceName(pcHostDomain, "CLED");
   MDNS.addServiceTxt(hMDNSService, "FlashChipId", String(ESP.getFlashChipId()).c_str());
   MDNS.addServiceTxt(hMDNSService, "MAC", String(WiFi.macAddress()).c_str());
-
+  // MDNS.addDynamicServiceTxt(hMDNSService, "available", 1);
 
   DEBUGMLN("Device unique name: " + uniqueName);
   if (!MDNS.begin(uniqueName)) {
@@ -71,6 +73,7 @@ APICLG::RequestType APICLG::serverUpdate() {
 
   MDNS.update();
 
+
   // MDNS.announce();
 
   // Check if a client has connected
@@ -79,9 +82,7 @@ APICLG::RequestType APICLG::serverUpdate() {
   if (client) {
     DEBUGMLN("");
     DEBUGMLN("New client");
-    
     // Wait for data from client to become available
-
     uint8_t attemp = 5;
     
     for (uint8_t i = 0; i < attemp && (client.connected() && !client.available()); i++ ) {
@@ -90,6 +91,8 @@ APICLG::RequestType APICLG::serverUpdate() {
         client.stop();
         DEBUGMLN("No data from client");
         return RequestType::ERROR;
+
+        // to do response to client with error
       }
     }
 
@@ -119,12 +122,12 @@ APICLG::RequestType APICLG::serverUpdate() {
         
         answer = "HTTP/1.1 200 OK\r\n";
         answer += "Content-Type: application/json\r\n";
-        answer += "Content-Length: " + String(measureJsonPretty(doc)) + "\r\n";
+        answer += "Content-Length: " + String(measureJson(doc)) + "\r\n";
         answer += "Connection: close\r\n";
         answer += "\r\n";
         client.print(answer);
         
-        serializeJsonPretty(doc, client);
+        serializeJson(doc, client);
         client.stop();
         serializeJsonPretty(doc, Serial);
 

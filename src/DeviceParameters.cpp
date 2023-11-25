@@ -50,7 +50,7 @@ uint8_t APICLG::updateDeviceParameters(const APICLG::PathParameters &param)
       }
       return 0;
     }
-    else if (param.name == "offset-voltage" && deviceParam.offsetVoltage != param.value.toInt()){
+    else if (param.name == "offset-voltage"){
       deviceParam.offsetVoltage = param.value.toInt();
       return 0;
     }
@@ -95,11 +95,12 @@ uint8_t APICLG::updateDeviceParameters(const APICLG::PathParameters &param)
       }
       return 0;
     }
-    else if (param.name == "gradient-number" && deviceParam.gradientNumber != param.value.toInt()){
+    // else if (param.name == "gradient-number" && deviceParam.gradientNumber != param.value.toInt()){
+    else if (param.name == "gradient-number"){
       deviceParam.gradientNumber = param.value.toInt();
       return 0;
     }
-    else if (param.name == "gradient-scale" && deviceParam.gradientScale != param.value.toInt()){
+    else if (param.name == "gradient-scale"){
       deviceParam.gradientScale = param.value.toInt();
       return 0;
     }
@@ -120,7 +121,7 @@ uint8_t APICLG::updateDeviceParameters(const APICLG::PathParameters &param)
       return 0;
     }
 
-    else if (param.name == "speed" && deviceParam.speed != param.value.toInt()){
+    else if (param.name == "speed"){
       deviceParam.speed = param.value.toInt();
       return 0;
     }
@@ -144,6 +145,8 @@ uint8_t APICLG::updateDeviceParameters(const APICLG::PathParameters &param)
     }
 
     else {
+      DEBUGMLN("Invalid param or same: " + param.name + " = " + param.value);
+      DEBUGMLN("Key: " + param.name);
       DEBUGMLN("Invalid param or same: " + param.name + " = " + param.value);
       return 2;
     }

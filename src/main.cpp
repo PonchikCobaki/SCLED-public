@@ -60,7 +60,7 @@ void setup() {
 #endif // DEBUG_SERIAL
 #endif // SAVE_EEPROM
 
-  if (!APICLG::mDNSServerInit())
+  if (!APICLG::serverInit())
     Error(3);
 }
 
@@ -180,6 +180,7 @@ void FillingLEDsSolidColors(CHSV hsv){
 }
 
 void FillingLEDsSolidColors(const char *hsvCStr){
+
   uint32_t hsvHex = strtol(hsvCStr, NULL, 16);
   CHSV hsv((hsvHex >> 16) & 0xFF, (hsvHex >> 8) & 0xFF, hsvHex & 0xFF);
   fill_solid(leds, NUM_LEDS, hsv);
@@ -232,4 +233,10 @@ void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const 
   rgb = 0;
   fill_solid(leds, NUM_LEDS, rgb);
   FastLED.show();
+
+ 
 }
+
+
+
+
