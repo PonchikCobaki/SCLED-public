@@ -13,6 +13,8 @@ void DeviceDataFile::setBuffer(ServiceParemeters *servicesData)
 
 void DeviceDataFile::saveServicesData()
 {
+    qDebug() << "Save service data ";
+
     QJsonObject jsonServiceName;
 
     for (const auto& pair : servicesData->getUName().toStdMap()){
@@ -43,7 +45,7 @@ void DeviceDataFile::saveServicesData()
 
 void DeviceDataFile::readServicesData()
 {
-    qDebug() << "read Service data ";
+    qDebug() << "Read service data ";
 
     QFile file(path);
     if (file.open(QIODevice::ReadOnly)) {

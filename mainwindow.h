@@ -1,13 +1,17 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+
+
 #include <QMainWindow>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QMap>
 #include <QColorDialog>
 #include <QColor>
+
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include <QUrlQuery>
+
+#include <QMap>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -20,8 +24,16 @@
 #include <browser.h>
 #include <resolver.h>
 
+#include <cmath>
+
+#include <QElapsedTimer>
+
+
+#include "renameDialog.h"
+
 #include "serviceParemeters.h"
 #include "deviceDataFiles.h"
+
 
 
 Q_DECLARE_METATYPE(QMdnsEngine::Service)
@@ -45,6 +57,11 @@ public:
     ServiceParemeters servicesData;
     DeviceDataFile servicesFile;
 
+    int timeoutRequest = 100;
+    QElapsedTimer timerUpdate;
+    QElapsedTimer timerRequest;
+
+
 //    QMap<QString, QHostAddress> devicesMap; // Service name, device IP
 //    QMap<QString, QString> nameMap; // Service name, User device name
 //    QMap<QString, QString> reverseNameMap; // User device name,  Service name
@@ -52,11 +69,12 @@ public:
     QNetworkAccessManager *manager = nullptr;
     QNetworkAccessManager *postManager = nullptr;
     QColorDialog          *colorDialog = nullptr;
+    QDialog               *renameWinwdow = nullptr;
 
 private slots:
     void on_colorPushButton_clicked();
 
-    void on_selectedDeviceComboBox_currentTextChanged(const QString &arg1);
+    void on_selectedDeviceComboBox_textActivated(const QString &arg1);
 
     void on_deviceSearch_clicked();
 
@@ -68,9 +86,13 @@ private slots:
 
     void on_fileClearButton_clicked();
 
-//    void on_horizontalSliderHue_valueChanged(int value);
-//    void on_horizontalSliderSaturation_valueChanged(int value);
+    void on_horizontalSliderHue_valueChanged(int value);
+    void on_horizontalSliderSaturation_valueChanged(int value);
     void on_horizontalSliderValue_valueChanged(int value);
+
+    void on_horizontalSliderScale_valueChanged(int value);
+    void on_horizontalSliderSpeed_valueChanged(int value);
+
 
     void on_onButton_clicked(bool checked);
 
@@ -78,11 +100,13 @@ private slots:
 
     void on_gradientNameComboBox_activated(int index);
 
-    void on_horizontalSliderScale_valueChanged(int value);
-
-    void on_horizontalSliderSpeed_valueChanged(int value);
 
 
+
+
+    void on_blendComboBox_activated(int index);
+
+    void on_renameService_clicked();
 
 private:
 
@@ -90,35 +114,42 @@ private:
     QJsonDocument jsonDocDeviceParameters;
     QJsonObject jsonDeviceParameters;
     QJsonArray hsv;
-    QString state;
+//    QString state;
 
     void serviceSerachRestart();
     void serviceResolver(const QMdnsEngine::Service &service);
 //    void serviceResolver(const QString &serviceName);
 
     void jsonParse(QString jsonString);
-    void resolveJsonParse();
+//    void resolveJsonParse();
 
     void requestParamsFromDevice();
+    void requestParamsFromDevice(const QHostAddress &address);
     void updateParamsOnDevice(QUrlQuery query);
-
 
     QString getCurrentDeviceAddress();
     QString getHexHSVColor();
 
 
-    void onOnColorChanged(const QColor &color);
-
-
     void currentDeviceComboUpdate();
+
     void updateColorItemUi();
+    void updateColorPickerButton();
+    void checkHSVSliders();
 
     void checkState();
-    void checkMode();
+    void checkProgramMode();
+    void checkGradientNum();
+    void checkBlend();
+
+    void checkScale();
+    void checkSpeed();
 
     void deactivateColorControls();
     void setEnabledSolidMode();
     void setEnabledGradientMode();
+
+    void onOnColorChanged(const QColor &color);
 
 };
 #endif // MAINWINDOW_H

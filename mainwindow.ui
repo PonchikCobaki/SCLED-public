@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>434</width>
-    <height>605</height>
+    <width>436</width>
+    <height>628</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_8">
+   <layout class="QVBoxLayout" name="verticalLayout_9">
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_5">
       <item>
@@ -124,6 +124,141 @@
           <layout class="QVBoxLayout" name="verticalLayout_2">
            <item>
             <layout class="QGridLayout" name="gridLayout_4">
+             <item row="4" column="0">
+              <widget class="QLabel" name="gradientNameLabel_3">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>45</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Scale</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="modeComboBox">
+               <property name="currentText">
+                <string>Solid</string>
+               </property>
+               <item>
+                <property name="text">
+                 <string>Solid</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Blink</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Gradient</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Sunrise</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="gradientNameLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>45</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Name</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <layout class="QHBoxLayout" name="horizontalLayout">
+               <item>
+                <widget class="QSlider" name="horizontalSliderSpeed">
+                 <property name="maximum">
+                  <number>100</number>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="spinBoxSpeed">
+                 <property name="suffix">
+                  <string>%</string>
+                 </property>
+                 <property name="maximum">
+                  <number>100</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="modeLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>45</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Mode</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
              <item row="2" column="1">
               <widget class="QComboBox" name="gradientNameComboBox">
                <property name="sizePolicy">
@@ -178,58 +313,6 @@ border-radius: 10px;</string>
                </property>
               </widget>
              </item>
-             <item row="4" column="0">
-              <widget class="QLabel" name="speedLabel">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>45</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Speed</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="1">
-              <layout class="QHBoxLayout" name="horizontalLayout">
-               <item>
-                <widget class="QSlider" name="horizontalSliderSpeed">
-                 <property name="maximum">
-                  <number>100</number>
-                 </property>
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QSpinBox" name="spinBoxSpeed">
-                 <property name="suffix">
-                  <string>%</string>
-                 </property>
-                 <property name="maximum">
-                  <number>100</number>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
              <item row="1" column="0">
               <widget class="QLabel" name="colorLabel">
                <property name="sizePolicy">
@@ -258,8 +341,8 @@ border-radius: 10px;</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="modeLabel">
+             <item row="5" column="0">
+              <widget class="QLabel" name="speedLabel">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                  <horstretch>0</horstretch>
@@ -279,97 +362,14 @@ border-radius: 10px;</string>
                 </size>
                </property>
                <property name="text">
-                <string>Mode</string>
+                <string>Speed</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="gradientNameLabel">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>45</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Name</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QComboBox" name="modeComboBox">
-               <property name="currentText">
-                <string>Solid</string>
-               </property>
-               <item>
-                <property name="text">
-                 <string>Solid</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Blink</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Gradient</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Sunrise</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="gradientNameLabel_3">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>45</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Scale</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
+             <item row="4" column="1">
               <layout class="QHBoxLayout" name="horizontalLayoutScaleSlider">
                <item>
                 <widget class="QSlider" name="horizontalSliderScale">
@@ -392,6 +392,71 @@ border-radius: 10px;</string>
                 </widget>
                </item>
               </layout>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="blendLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>45</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Blend</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QComboBox" name="blendComboBox">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>100</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="editable">
+                <bool>false</bool>
+               </property>
+               <property name="currentText">
+                <string>Linear</string>
+               </property>
+               <item>
+                <property name="text">
+                 <string>Linear</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Linear nowarp</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>No</string>
+                </property>
+               </item>
+              </widget>
              </item>
             </layout>
            </item>
@@ -416,39 +481,6 @@ border-radius: 10px;</string>
           <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
             <layout class="QGridLayout" name="gridLayout_2">
-             <item row="2" column="0">
-              <widget class="QPushButton" name="updateParameters">
-               <property name="text">
-                <string>Update</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QComboBox" name="selectedDeviceComboBox">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>100</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="editable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QPushButton" name="deviceSearch">
-               <property name="text">
-                <string>Search</string>
-               </property>
-              </widget>
-             </item>
              <item row="0" column="1">
               <layout class="QHBoxLayout" name="horizontalLayout_3">
                <item>
@@ -524,7 +556,7 @@ border-radius: 10px;</string>
                     <string/>
                    </property>
                    <property name="icon">
-                    <iconset resource="icons.qrc">
+                    <iconset>
                      <normaloff>:/icon/resurce/icon/icon-stand-by-off.png</normaloff>
                      <normalon>:/icon/resurce/icon/icon-stand-by-on.png</normalon>
                      <activeon>:/icon/resurce/icon/icon-stand-by-on.png</activeon>
@@ -580,6 +612,50 @@ border-radius: 10px;</string>
                </item>
               </layout>
              </item>
+             <item row="0" column="0">
+              <layout class="QVBoxLayout" name="verticalLayout_8">
+               <item>
+                <widget class="QComboBox" name="selectedDeviceComboBox">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>100</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="editable">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="updateParameters">
+                 <property name="text">
+                  <string>Update</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="3" column="1">
+              <widget class="QPushButton" name="renameService">
+               <property name="text">
+                <string>Rename</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QPushButton" name="deviceSearch">
+               <property name="text">
+                <string>Search</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
           </layout>
@@ -617,6 +693,19 @@ border-radius: 10px;</string>
            </item>
           </layout>
          </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </item>
@@ -675,129 +764,15 @@ border-radius: 10px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>434</width>
+     <width>436</width>
      <height>23</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources>
-  <include location="icons.qrc"/>
- </resources>
+ <resources/>
  <connections>
-  <connection>
-   <sender>horizontalSliderHue</sender>
-   <signal>sliderMoved(int)</signal>
-   <receiver>spinBoxHue</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>140</x>
-     <y>62</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>191</x>
-     <y>62</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSliderSaturation</sender>
-   <signal>sliderMoved(int)</signal>
-   <receiver>spinBoxSaturation</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>144</x>
-     <y>91</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>184</x>
-     <y>91</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSliderValue</sender>
-   <signal>sliderMoved(int)</signal>
-   <receiver>spinBoxValue</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>156</x>
-     <y>124</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>197</x>
-     <y>119</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBoxHue</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>horizontalSliderHue</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>179</x>
-     <y>72</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>136</x>
-     <y>78</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBoxSaturation</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>horizontalSliderSaturation</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>180</x>
-     <y>103</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>150</x>
-     <y>106</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBoxValue</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>horizontalSliderValue</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>173</x>
-     <y>133</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>146</x>
-     <y>136</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSliderScale</sender>
-   <signal>sliderMoved(int)</signal>
-   <receiver>spinBoxScale</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>130</x>
-     <y>276</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>186</x>
-     <y>271</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>spinBoxScale</sender>
    <signal>valueChanged(int)</signal>
@@ -805,28 +780,44 @@ border-radius: 10px;</string>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>189</x>
-     <y>285</y>
+     <x>191</x>
+     <y>279</y>
     </hint>
     <hint type="destinationlabel">
-     <x>154</x>
+     <x>87</x>
+     <y>272</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>horizontalSliderScale</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>spinBoxScale</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>137</x>
      <y>286</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>192</x>
+     <y>288</y>
     </hint>
    </hints>
   </connection>
   <connection>
    <sender>horizontalSliderSpeed</sender>
-   <signal>sliderMoved(int)</signal>
+   <signal>valueChanged(int)</signal>
    <receiver>spinBoxSpeed</receiver>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>144</x>
-     <y>302</y>
+     <x>135</x>
+     <y>303</y>
     </hint>
     <hint type="destinationlabel">
-     <x>207</x>
-     <y>301</y>
+     <x>187</x>
+     <y>318</y>
     </hint>
    </hints>
   </connection>
@@ -837,12 +828,108 @@ border-radius: 10px;</string>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>170</x>
-     <y>314</y>
+     <x>174</x>
+     <y>307</y>
     </hint>
     <hint type="destinationlabel">
-     <x>145</x>
-     <y>315</y>
+     <x>138</x>
+     <y>300</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxValue</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>horizontalSliderValue</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>184</x>
+     <y>125</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>141</x>
+     <y>120</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxSaturation</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>horizontalSliderSaturation</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>188</x>
+     <y>96</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>137</x>
+     <y>92</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxHue</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>horizontalSliderHue</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>190</x>
+     <y>71</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>148</x>
+     <y>66</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>horizontalSliderHue</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>spinBoxHue</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>146</x>
+     <y>78</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>181</x>
+     <y>82</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>horizontalSliderSaturation</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>spinBoxSaturation</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>132</x>
+     <y>106</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>181</x>
+     <y>105</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>horizontalSliderValue</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>spinBoxValue</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>137</x>
+     <y>137</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>184</x>
+     <y>138</y>
     </hint>
    </hints>
   </connection>

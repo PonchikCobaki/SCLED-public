@@ -8,27 +8,20 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
     ui->gradientNameComboBox->addItems(gradients);
-
-//    ui->colorPushButton->setStyleSheet("background-color: white;");
-
-
-
     deactivateColorControls();
 
-//    ui->ColorSettingsGroupBox->setEnabled(0);
 
     servicesFile.setBuffer(&servicesData);
     servicesFile.readServicesData();
 
+    currentDeviceComboUpdate();
+
     serviceSerachRestart();
 
-    currentDeviceComboUpdate();
-    checkState();
 
     setEnabledSolidMode();
-
-//    checkMode();
 
     manager = new QNetworkAccessManager(this);
     connect(manager,
@@ -44,7 +37,12 @@ MainWindow::MainWindow(QWidget *parent)
                 if (!answer.isEmpty()){
                     jsonParse(answer);
                     checkState();
-                    checkMode();
+                    updateColorItemUi();
+                    checkProgramMode();
+                    checkGradientNum();
+                    checkBlend();
+                    checkScale();
+                    checkSpeed();
                     ui->plainTextEdit->clear();
 //                    ui->plainTextEdit->appendPlainText(getCurrentDeviceAddress());
                     ui->plainTextEdit->appendPlainText(answer);
@@ -80,13 +78,6 @@ void MainWindow::serviceSerachRestart()
                      &QMdnsEngine::Browser::serviceAdded,
                      [=](const QMdnsEngine::Service &service) {
                          qDebug() << "Service added:" << service.name();
-//                         qDebug() << service.name().contains("CLED") << "discovered!";
-//                         ui->plainTextEdit->appendPlainText(service.name());
-                         //                        foreach (const QByteArray& key, service.attributes().keys()) {
-                         //                            qDebug() << "param: " + key + ", Value: " + service.attributes().value(key) + "\n";
-                         //                        }
-                         //                        ui->plainTextEdit->appendPlainText(service.attributes()
-                         //                        ui->plainTextEdit->appendPlainText(service.port());
                          serviceResolver(service);
                      });
 
@@ -113,21 +104,27 @@ void MainWindow::serviceResolver(const QMdnsEngine::Service &service)
     QMdnsEngine::Resolver *resolver = new QMdnsEngine::Resolver(&server, service.hostname(), cache);
     QObject::connect(resolver, &QMdnsEngine::Resolver::resolved,
                      [=](const QHostAddress &address) {
-                         qDebug() << "resolved to" << address;
-        servicesData.insertDevice(service.name(), address);
-                         if (!servicesData.getUName().contains(service.name())){
-                             QString name = QString("Device " + QString::number(servicesData.getUName().size() + 1));
-                             servicesData.insertUName(service.name(), name);
-                             currentDeviceComboUpdate();
-//                             saveServiceInfoInFile();
+                        qDebug() << "resolved to" << address;
+                        // update ip in data map
+                        servicesData.insertService(service.name(), address);
 
+                        // add new servse in data map
+                        if (!servicesData.getUName().contains(service.name())){
+                            QString name = QString("Device " + QString::number(servicesData.getUName().size() + 1));
+                            servicesData.insertUName(service.name(), name);
+                            currentDeviceComboUpdate();
+                            servicesFile.saveServicesData();
                          }
 
-                         if (jsonDocDeviceParameters.isEmpty()){
-                             requestParamsFromDevice();
-                         }
+                        // first start
+                        if (jsonDocDeviceParameters.isEmpty()){
+                            requestParamsFromDevice(address);
+                        }
 
-                         resolver->deleteLater();
+
+
+                        resolver->deleteLater();
+
                      });
 
 }
@@ -173,38 +170,117 @@ void MainWindow::serviceResolver(const QMdnsEngine::Service &service)
 //                     });
 //}
 
+void MainWindow::jsonParse(QString jsonString)
+{
+    jsonDocDeviceParameters = QJsonDocument::fromJson(jsonString.toUtf8());
+    jsonDeviceParameters = jsonDocDeviceParameters.object();
+
+    hsv = jsonDeviceParameters.value("hsv").toArray();
+
+
+    //    // Пример вывода всех ключей и значений в отладочное окно
+    //        for (auto it = jsonDeviceParameters.begin(); it != jsonDeviceParameters.end(); ++it) {
+    //        QString key = it.key();
+    //        QJsonValue value = it.value();
+
+    //        qDebug().noquote() << key << ": ";
+    //        if (value.isDouble()) {
+    //            qDebug().noquote() << QString::number(value.toInt());
+    //        } else if (value.isString()) {
+    //            qDebug().noquote() << value.toString();
+    //        } else if(value.isArray()) {
+    //            QJsonArray jsonArray = value.toArray();
+
+    //            // Выводим каждый элемент массива
+    //            for (const QJsonValue& value : jsonArray) {
+    //                // Выводим значение элемента в отладочное окно
+    //                qDebug() << "Array value:" << value.toString();
+    //            }
+    //        } else {
+    //            qDebug() << "Неизвестный тип данных";
+    //        }
+    //    }
+}
+
+//void MainWindow::resolveJsonParse()
+//{
+//    jsonDeviceParameters = jsonDocDeviceParameters.object();
+//    hsv = jsonDeviceParameters.value("hsv").toArray();
+
+//    QColor color = QColor();
+//    int h = std::round(hsv[0].toInt() / 255.0 * 360.0);
+//    int s = hsv[1].toInt();
+//    int v = hsv[2].toInt();
+
+//    color.setHsv(h, s, v);
+//    qDebug() << color;
+
+//    QPalette Pal(palette());
+//    Pal.setColor(QPalette::Button, color.rgb());
+//    //    ui->colorPushButton->setAutoFillBackground(true);
+//    //    ui->colorPushButton->setPalette(Pal);
+
+//    QString qss = QString("QPushButton {background-color: %1;"
+//                          "border-radius: 10px;"
+//                          "}").arg(color.name());
+//    ui->colorPushButton->setStyleSheet(qss);
+
+//}
+
 void MainWindow::requestParamsFromDevice()
 {
-    QString addres = getCurrentDeviceAddress();
+    if (!timerRequest.isValid() || timerRequest.hasExpired(timeoutRequest)){
+        QString addres = getCurrentDeviceAddress();
 
-    if (addres != ""){
-        // Get
-        QNetworkRequest request;
-        request.setUrl(QUrl::fromUserInput(addres));
+        if (addres != ""){
+            // Get
+            QNetworkRequest request;
+            request.setUrl(QUrl::fromUserInput(addres));
 
-        manager->get(request);
+            manager->get(request);
+        }
+        timerRequest.start();
+    }
+}
+
+void MainWindow::requestParamsFromDevice(const QHostAddress &address)
+{
+    if (!timerRequest.isValid() || timerRequest.hasExpired(timeoutRequest)){
+        QString addres = address.toString();
+
+        if (addres != ""){
+            // Get
+            QNetworkRequest request;
+            request.setUrl(QUrl::fromUserInput(addres));
+
+            manager->get(request);
+        }
+        timerRequest.start();
     }
 }
 
 void MainWindow::updateParamsOnDevice(QUrlQuery query)
-{  
-    QString curAddress = getCurrentDeviceAddress();
+{
+    if (!timerUpdate.isValid() || timerUpdate.hasExpired(timeoutRequest)){
+        QString curAddress = getCurrentDeviceAddress();
 
-    if (curAddress != ""){
-        QNetworkRequest request;
+        if (curAddress != ""){
+            QNetworkRequest request;
 
-        QUrl url = QUrl::fromUserInput(curAddress + "/api");
-//        QUrlQuery query;
-//        query.addQueryItem("state", state);
-//        query.addQueryItem("hsv", getHexHSVColor());
+            QUrl url = QUrl::fromUserInput(curAddress + "/api");
+    //        QUrlQuery query;
+    //        query.addQueryItem("state", state);
+    //        query.addQueryItem("hsv", getHexHSVColor());
 
-        url.setQuery(query.query());
+            url.setQuery(query.query());
 
-        request.setUrl(url);
-        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-        manager->post(request, QByteArray());
+            request.setUrl(url);
+            request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+            manager->post(request, QByteArray());
+
+        }
+        timerUpdate.start();
     }
-
 }
 
 QString MainWindow::getCurrentDeviceAddress()
@@ -257,88 +333,54 @@ QString MainWindow::getHexHSVColor()
 }
 
 
-void MainWindow::jsonParse(QString jsonString)
+/*------------------------------GUI-----------------------------------*/
+
+
+
+void MainWindow::currentDeviceComboUpdate()
 {
-    jsonDocDeviceParameters = QJsonDocument::fromJson(jsonString.toUtf8());
-    jsonDeviceParameters = jsonDocDeviceParameters.object();
-
-    hsv = jsonDeviceParameters.value("hsv").toArray();
-
-    updateColorItemUi();
-
-    //    // Пример вывода всех ключей и значений в отладочное окно
-    //        for (auto it = jsonDeviceParameters.begin(); it != jsonDeviceParameters.end(); ++it) {
-    //        QString key = it.key();
-    //        QJsonValue value = it.value();
-
-    //        qDebug().noquote() << key << ": ";
-    //        if (value.isDouble()) {
-    //            qDebug().noquote() << QString::number(value.toInt());
-    //        } else if (value.isString()) {
-    //            qDebug().noquote() << value.toString();
-    //        } else if(value.isArray()) {
-    //            QJsonArray jsonArray = value.toArray();
-
-    //            // Выводим каждый элемент массива
-    //            for (const QJsonValue& value : jsonArray) {
-    //                // Выводим значение элемента в отладочное окно
-    //                qDebug() << "Array value:" << value.toString();
-    //            }
-    //        } else {
-    //            qDebug() << "Неизвестный тип данных";
-    //        }
-    //    }
+    ui->selectedDeviceComboBox->clear();
+    for (const QString &userDeviceName : servicesData.getRevUName().keys()) {
+        ui->selectedDeviceComboBox->addItem(userDeviceName);
+    }
 }
 
-void MainWindow::resolveJsonParse()
+void MainWindow::updateColorItemUi()
 {
-    jsonDeviceParameters = jsonDocDeviceParameters.object();
-    hsv = jsonDeviceParameters.value("hsv").toArray();
+    checkHSVSliders();
+    updateColorPickerButton();
+}
+
+void MainWindow::updateColorPickerButton()
+{
+    int h = std::round(hsv[0].toInt() / 255.0 * 360.0);
+    int s = hsv[1].toInt();
+    int v = std::round(hsv[2].toInt() / 255.0 * 128) + 127;
 
     QColor color = QColor();
-    int h = hsv[0].toInt() / 255.0 * 360.0;
-    int s = hsv[1].toInt();
-    int v = hsv[2].toInt();
-
     color.setHsv(h, s, v);
-    qDebug() << color;
-
-    QPalette Pal(palette());
-    Pal.setColor(QPalette::Button, color.rgb());
-//    ui->colorPushButton->setAutoFillBackground(true);
-//    ui->colorPushButton->setPalette(Pal);
 
     QString qss = QString("QPushButton {background-color: %1;"
                           "border-radius: 10px;"
                           "}").arg(color.name());
     ui->colorPushButton->setStyleSheet(qss);
-
 }
 
-
-void MainWindow::onOnColorChanged(const QColor &color)
+void MainWindow::checkHSVSliders()
 {
-    int h, s, v;
-    color.getHsv(&h, &s, &v);
-    hsv[0] = int((h / 360.0 * 255.0));
-    hsv[1] = s;
-    hsv[2] = v;
+    int h = std::round(hsv[0].toInt() / 255.0 * 360.0);
+    int s = std::round(hsv[1].toInt() / 255.0 * 100.0);
+    int v = std::round(hsv[2].toInt() / 255.0 * 100.0);
 
-
-    updateColorItemUi();
-
-    QUrlQuery query;
-    query.addQueryItem("state", state);
-    query.addQueryItem("hsv", getHexHSVColor());
-
-    updateParamsOnDevice(query);
-    // todo add set spinboxes or sliders
+    ui->spinBoxHue->setValue(h);
+    ui->spinBoxSaturation->setValue(s);
+    ui->spinBoxValue->setValue(v);
 }
 
 void MainWindow::checkState()
 {
     QString s = jsonDeviceParameters.value("state").toString();
-    state = s;
+//    state = s;
     if (s == "run"){
         ui->onButton->setChecked(true);
     }
@@ -347,54 +389,55 @@ void MainWindow::checkState()
     }
 }
 
-void MainWindow::checkMode()
+void MainWindow::checkProgramMode()
 {
     QString mode = jsonDeviceParameters.value("program-type").toString();
-    mode = mode[0].toUpper() + mode.mid(1).toLower();;
-    ui->modeComboBox->setCurrentText(mode);
-    ui->modeComboBox->activated(ui->modeComboBox->currentIndex());
+    mode = mode[0].toUpper() + mode.mid(1).toLower();
+    if (mode != ui->modeComboBox->currentText()){
+        ui->modeComboBox->setCurrentText(mode);
+        ui->modeComboBox->activated(ui->modeComboBox->currentIndex());  // update enabled elements
+    }
+
     qDebug() << "mode " << mode;
 }
 
-void MainWindow::currentDeviceComboUpdate()
+void MainWindow::checkGradientNum()
 {
-    ui->selectedDeviceComboBox->clear();
-    for (const QString &userDeviceName : servicesData.getRevUName().keys()) {
-        ui->selectedDeviceComboBox->addItem(userDeviceName);
+    int gradientNum = jsonDeviceParameters.value("gradient-number").toInt();
+    if (gradientNum != ui->gradientNameComboBox->currentIndex()){
+        ui->gradientNameComboBox->setCurrentIndex(gradientNum);
+        qDebug() << "GradientNum " << gradientNum;
     }
-
 }
 
-void MainWindow::updateColorItemUi()
+void MainWindow::checkBlend()
 {
-//    hsv = jsonDeviceParameters.value("hsv").toArray();
-
-
-    int h = hsv[0].toInt() / 255.0 * 360.0;
-    int s = hsv[1].toInt();
-    int v = hsv[2].toInt();
-
-    QColor color = QColor();
-    color.setHsv(h, s, v);
-
-    qDebug() << "update color" << color;
-
-    QString qss = QString("QPushButton {background-color: %1;"
-                          "border-radius: 10px;"
-                          "}").arg(color.name());
-    ui->colorPushButton->setStyleSheet(qss);
-
-
-    ui->horizontalSliderHue->setSliderPosition(h);
-    ui->horizontalSliderSaturation->setSliderPosition(s / 255.0 * 100.0);
-    ui->horizontalSliderValue->setSliderPosition(v / 255.0 * 100.0);
-
-//    ui->spinBoxHue->setValue(h);
-//    ui->spinBoxSaturation->setValue(s / 255.0 * 100.0);
-//    ui->spinBoxValue->setValue(v / 255.0 * 100.0);
-
-
+    QString blend = jsonDeviceParameters.value("blend-type").toString();
+    if (blend == "linearblend"){
+        ui->blendComboBox->setCurrentIndex(0);
+    }
+    else if (blend == "linearblend-nowarp"){
+        ui->blendComboBox->setCurrentIndex(1);
+    }
+    else if (blend == "noblend"){
+        ui->blendComboBox->setCurrentIndex(2);
+    }
 }
+
+void MainWindow::checkScale()
+{
+    int scale = jsonDeviceParameters.value("scale").toInt();
+    ui->spinBoxScale->setValue(std::round(scale / 255.0 * 100.0));
+    qDebug() << "scale " << scale;
+}
+
+void MainWindow::checkSpeed()
+{
+    int speed = jsonDeviceParameters.value("speed").toInt();
+    ui->spinBoxSpeed->setValue(std::round(speed / 255.0 * 100.0));
+    qDebug() << "speed " << speed;
+}
+
 
 void MainWindow::deactivateColorControls()
 {
@@ -448,7 +491,20 @@ void MainWindow::setEnabledGradientMode()
     ui->spinBoxScale->setEnabled(true);
 }
 
+void MainWindow::onOnColorChanged(const QColor &color)
+{
+    int h, s, v;
+    color.getHsv(&h, &s, &v);
+    hsv[0] = std::round(h / 360.0 * 255.0);
+    hsv[1] = s;
+    hsv[2] = v;
 
+    QUrlQuery query;
+    query.addQueryItem("hsv", getHexHSVColor());
+    updateParamsOnDevice(query);
+
+    updateColorItemUi();
+}
 
 void MainWindow::on_colorPushButton_clicked()
 {
@@ -460,18 +516,18 @@ void MainWindow::on_colorPushButton_clicked()
 
 
     colorDialog = new QColorDialog(this);
-    connect(colorDialog, &QColorDialog::colorSelected, [=](const QColor &color){
-        onOnColorChanged(color);
-    });
-    //    connect(colorDialog, &QColorDialog::currentColorChanged, [=](const QColor &color){
-    //        onOnColorChanged(color);
-    //    });
+//    connect(colorDialog, &QColorDialog::colorSelected, [=](const QColor &color){
+//        onOnColorChanged(color);
+//    });
+        connect(colorDialog, &QColorDialog::currentColorChanged, [=](const QColor &color){
+            onOnColorChanged(color);
+        });
 
 
 
     QColor color = QColor();
 
-    int h = hsv[0].toInt() / 255.0 * 360.0;
+    int h = std::round(hsv[0].toInt() / 255.0 * 360.0);
     int s = hsv[1].toInt();
     int v = hsv[2].toInt();
 //    qDebug() << h << s << v;
@@ -480,27 +536,20 @@ void MainWindow::on_colorPushButton_clicked()
 
     colorDialog->setCurrentColor(color);
     colorDialog->show();
-
-//    updateColorItemUi();
-//    QPalette Pal(palette());
-//    Pal.setColor(QPalette::Button, color.rgb());
-//    ui->colorPushButton->setPalette(Pal);
-//    ui->colorPushButton->setAutoFillBackground(true);
-
-
 }
 
-
-void MainWindow::on_selectedDeviceComboBox_currentTextChanged(const QString &arg1)
+void MainWindow::on_selectedDeviceComboBox_textActivated(const QString &arg1)
 {
-    qDebug() << "currentTextChanged: " << arg1;
+    qDebug() << "current dev activated: " << arg1;
     qDebug() << "combo count: " << ui->selectedDeviceComboBox->count();
     qDebug() << "device count: " << servicesData.getServices().size();
 
-    if (ui->selectedDeviceComboBox->count() == servicesData.getServices().size()){
+    if (servicesData.getRevUName().contains(arg1)){
         requestParamsFromDevice();
     }
 }
+
+
 
 //void MainWindow::on_selectedDeviceComboBox_textActivated(const QString &arg1)
 //{
@@ -520,8 +569,6 @@ void MainWindow::on_deviceSearch_clicked()
     ui->plainTextEdit->clear();
     serviceSerachRestart();
 }
-
-
 
 
 void MainWindow::on_updateParameters_clicked()
@@ -549,7 +596,8 @@ void MainWindow::on_jsonReadButton_clicked()
 
 void MainWindow::on_fileClearButton_clicked()
 {
-//    servicesFile.clearServicesData();
+    // to do
+    servicesFile.clearServicesData();
 //    servicesData.getServices().clear();
 //    servicesData.getUName().clear();
 //    servicesData.getRevUName().clear();
@@ -557,40 +605,38 @@ void MainWindow::on_fileClearButton_clicked()
 }
 
 
-//void MainWindow::on_horizontalSliderHue_valueChanged(int value)
-//{
-//    hsv[0] = int((value / 360.0 * 255.0));
-//    updateColorItemUi();
+void MainWindow::on_horizontalSliderHue_valueChanged(int value)
+{
+    hsv[0] = std::round(value / 360.0 * 255.0);
+    QUrlQuery query;
+    query.addQueryItem("hsv", getHexHSVColor());
+    updateParamsOnDevice(query);
+    updateColorPickerButton();
+}
 
-//    QUrlQuery query;
-//    query.addQueryItem("hsv", getHexHSVColor());
-////    updateParamsOnDevice(query);
-//}
-
-//void MainWindow::on_horizontalSliderSaturation_valueChanged(int value)
-//{
-//    hsv[1] = int((value / 100.0 * 255.0));
-//    updateColorItemUi();
-
-//    QUrlQuery query;
-//    query.addQueryItem("hsv", getHexHSVColor());
-////    updateParamsOnDevice(query);
-//}
+void MainWindow::on_horizontalSliderSaturation_valueChanged(int value)
+{
+    hsv[1] = int(value * 2.55);
+    QUrlQuery query;
+    query.addQueryItem("hsv", getHexHSVColor());
+    updateParamsOnDevice(query);
+    updateColorPickerButton();
+}
 
 
 void MainWindow::on_horizontalSliderValue_valueChanged(int value)
 {
-    hsv[2] = int((value / 100.0 * 255.0));
-//    updateColorItemUi();
-
+    hsv[2] = int(value * 2.55);
     QUrlQuery query;
     query.addQueryItem("hsv", getHexHSVColor());
     updateParamsOnDevice(query);
+    updateColorPickerButton();
 }
 
 
 void MainWindow::on_onButton_clicked(bool checked)
 {
+    QString state;
     if (checked){
         state = "run";
     } else {
@@ -666,9 +712,9 @@ void MainWindow::on_gradientNameComboBox_activated(int index)
 
 void MainWindow::on_horizontalSliderScale_valueChanged(int value)
 {
-    qDebug() << "gradient-scale " << value;
+    qDebug() << "scale " << value;
     QUrlQuery query;
-    query.addQueryItem("gradient-scale", QString::number(value));
+    query.addQueryItem("scale", QString::number(std::round(value / 100. * 255)));
     updateParamsOnDevice(query);
 
 }
@@ -678,10 +724,42 @@ void MainWindow::on_horizontalSliderSpeed_valueChanged(int value)
 {
     qDebug() << "speed " << value;
     QUrlQuery query;
-    query.addQueryItem("speed", QString::number(value));
+    query.addQueryItem("speed", QString::number(std::round(value / 100. * 255)));
     updateParamsOnDevice(query);
 }
 
 
+void MainWindow::on_blendComboBox_activated(int index)
+{
 
+    QUrlQuery query;
+
+    if (index == 0){
+        query.addQueryItem("blend-type", "linearblend");
+    }
+    else if (index == 1){
+        query.addQueryItem("blend-type", "linearblend-nowarp");
+    }
+    else {
+        query.addQueryItem("blend-type", "noblend");
+    }
+
+    updateParamsOnDevice(query);
+}
+
+
+void MainWindow::on_renameService_clicked()
+{
+    if (renameWinwdow != nullptr){
+        delete renameWinwdow;
+        renameWinwdow = nullptr;
+    }
+
+    connect(renameWinwdow, &QDialog::currentColorChanged, [=](const QColor &color){
+        onOnColorChanged(color);
+    });
+
+    renameWinwdow = new renameDialog(this);
+    renameWinwdow->show();
+}
 

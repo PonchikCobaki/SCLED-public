@@ -57,7 +57,7 @@ bool ServiceParemeters::getAvailableStatus(const QString service)
     return this->availableMap.value(service);
 }
 
-void ServiceParemeters::insertDevice(const QString service, const QHostAddress IP)
+void ServiceParemeters::insertService(const QString service, const QHostAddress IP)
 {
     this->devicesMap.insert(service, IP);
 }

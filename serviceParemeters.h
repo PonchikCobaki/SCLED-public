@@ -26,8 +26,8 @@ public:
     const QMap<QString, QString>& getaAvailable();          // return service name name, available flag
 
     bool getAvailableStatus(const QString service);
-
-    void insertDevice(const QString service, const QHostAddress IP);
+    
+    void insertService(const QString service, const QHostAddress IP);
     void insertUName(const QString service, const QString name);
 
     void updateAvailable(const QString service, const bool state);

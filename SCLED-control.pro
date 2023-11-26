@@ -12,16 +12,19 @@ SOURCES += \
     deviceDataFiles.cpp \
     main.cpp \
     mainwindow.cpp \
+    renameDialog.cpp \
     serviceParemeters.cpp
 
 HEADERS += \
     deviceDataFiles.h \
     gradientPaletts.cpp \
     mainwindow.h \
+    renameDialog.h \
     serviceParemeters.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    renameDialog.ui
 
 win32:RC_FILE = file.rc
 
