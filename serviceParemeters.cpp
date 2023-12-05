@@ -68,6 +68,12 @@ void ServiceParemeters::insertUName(const QString service, const QString name)
     this->reverseNameMap.insert(name, service);
 }
 
+void ServiceParemeters::changeUName(const QString service, const QString oldName, const QString newName)
+{
+    this->reverseNameMap.take(oldName);
+    insertUName(service, newName);
+}
+
 void ServiceParemeters::updateAvailable(const QString service, const bool state)
 {
     availableMap.insert(service, state);

@@ -6,6 +6,9 @@ renameDialog::renameDialog(QWidget *parent) :
     ui(new Ui::renameDialog)
 {
     ui->setupUi(this);
+    this->setModal(true);
+
+
 }
 
 renameDialog::~renameDialog()
@@ -13,7 +16,32 @@ renameDialog::~renameDialog()
     delete ui;
 }
 
-bool renameDialog::takingDecision()
+void renameDialog::setDataPtr(ServiceParemeters *servicesData)
 {
-    return true;
+    this->servicesData = servicesData;
 }
+
+void renameDialog::setCurrentService(const QString curService)
+{
+    this->curService = curService;
+    oldName = servicesData->getUName().value(curService);
+    ui->lineEdit->setText(oldName);
+}
+
+void renameDialog::on_buttonBox_accepted()
+{
+    QString newName = ui->lineEdit->text();
+    if (newName != ""){
+        if (!servicesData->getRevUName().contains(newName))
+            servicesData->changeUName(curService, oldName, newName);
+    }
+
+    this->close();
+}
+
+
+void renameDialog::on_buttonBox_rejected()
+{
+    this->close();
+}
+

@@ -128,6 +128,7 @@ private:
     void updateParamsOnDevice(QUrlQuery query);
 
     QString getCurrentDeviceAddress();
+    QString getCurrentService();
     QString getHexHSVColor();
 
 

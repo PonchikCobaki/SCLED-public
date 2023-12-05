@@ -28,7 +28,8 @@ public:
     bool getAvailableStatus(const QString service);
     
     void insertService(const QString service, const QHostAddress IP);
-    void insertUName(const QString service, const QString name);
+    void insertUName(const QString service, const QString name);    // update value of key or add new key
+    void changeUName(const QString service, const QString oldName, const QString newName);    // change key and value
 
     void updateAvailable(const QString service, const bool state);
 };

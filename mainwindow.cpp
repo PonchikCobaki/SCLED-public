@@ -286,23 +286,23 @@ void MainWindow::updateParamsOnDevice(QUrlQuery query)
 QString MainWindow::getCurrentDeviceAddress()
 {
 
-    if (ui->selectedDeviceComboBox->currentIndex() == -1)
-    {
-        qDebug() << "Error missing services";
-        return "";
-    }
+//    if (ui->selectedDeviceComboBox->currentIndex() == -1)
+//    {
+//        qDebug() << "Error missing services";
+//        return "";
+//    }
 
-    QString curUName = ui->selectedDeviceComboBox->currentText();
+//    QString curUName = ui->selectedDeviceComboBox->currentText();
 
-    if (servicesData.getUName().contains(curUName))
-    {
-        qDebug() << "Error non-existent device" << curUName;
-        return "";
-    }
+//    if (servicesData.getUName().contains(curUName))
+//    {
+//        qDebug() << "Error non-existent device" << curUName;
+//        return "";
+//    }
 
-    // TO DO !!! если существует Uname и сервер доступен (были данные на счет его API) то отдаем адрес
+//  //   TO DO !!! если существует Uname и сервер доступен (были данные на счет его API) то отдаем адрес
 
-    QString curService = servicesData.getRevUName().value(curUName);
+    QString curService = getCurrentService();
 
     if (servicesData.getServices().contains(curService)){
 
@@ -311,13 +311,36 @@ QString MainWindow::getCurrentDeviceAddress()
 
         return address.toString();
 
-    } else {
-        qDebug() << "Error missing address";
-        serviceSerachRestart();
+    }
 
+    qDebug() << "Error missing address";
+    serviceSerachRestart();
+
+    return "";
+
+}
+
+QString MainWindow::getCurrentService()
+{
+    //  if ui combo with services list is empty
+    if (ui->selectedDeviceComboBox->currentIndex() == -1)
+    {
+        qDebug() << "Error missing services";
         return "";
     }
 
+    QString curUName = ui->selectedDeviceComboBox->currentText();
+
+    //  if the newly entered in combo box user name is missing
+    if (servicesData.getUName().contains(curUName))
+    {
+        qDebug() << "Error non-existent device" << curUName;
+        return "";
+    }
+
+    // TO DO !!! если существует Uname и сервер доступен (были данные на счет его API) то отдаем адрес
+
+    return servicesData.getRevUName().value(curUName);
 }
 
 QString MainWindow::getHexHSVColor()
@@ -750,16 +773,21 @@ void MainWindow::on_blendComboBox_activated(int index)
 
 void MainWindow::on_renameService_clicked()
 {
-    if (renameWinwdow != nullptr){
-        delete renameWinwdow;
-        renameWinwdow = nullptr;
-    }
 
-    connect(renameWinwdow, &QDialog::currentColorChanged, [=](const QColor &color){
-        onOnColorChanged(color);
-    });
+//    connect(renameWinwdow, &QDialog::currentColorChanged, [=](const QColor &color){
+//        onOnColorChanged(color);
+//    });
 
-    renameWinwdow = new renameDialog(this);
-    renameWinwdow->show();
+    renameDialog *rw = new renameDialog(this);
+
+
+    rw->setDataPtr(&servicesData);
+    rw->setCurrentService(getCurrentService());
+    rw->show();
+    rw->exec();
+
+    currentDeviceComboUpdate();
+    servicesFile.saveServicesData();
+
 }
 
