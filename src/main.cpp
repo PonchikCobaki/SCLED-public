@@ -19,8 +19,8 @@ void FillingLEDsSolidColors(const uint8_t hue, const uint8_t sat, const uint8_t 
 void FillingLEDsSolidColors(CHSV hsv);
 void FillingLEDsSolidColors(const char *hsvCStr);
 void FillLEDsFromPaletteColors(const APICLG::DeviceParameters &devPar);
-void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t valMax, const uint8_t speed, const uint8_t smooth);
-void SunRise(const uint8_t valMax);
+void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const uint8_t valMax, const uint16_t samplingPeriod, const uint8_t smooth, uint8_t mode=0);
+void SunRise(const uint8_t valMax, const uint8_t executionTime, const bool reset);
 
 void setup() {
   #ifdef DEBUG_SERIAL
@@ -122,7 +122,14 @@ void loop() {
       break;
 
     case APICLG::ProgramType::blink:
-      SmoothBlink(deviceParam.hue, deviceParam.sat, deviceParam.val, deviceParam.speed, deviceParam.scale);
+      SmoothBlink(deviceParam.hue,
+                  deviceParam.sat,
+                  deviceParam.val,
+                  deviceParam.val,
+                  5000.0 / deviceParam.speed,
+                  deviceParam.scale,
+                  deviceParam.offsetVoltage
+                  );
     // to do
       break;
 
@@ -154,9 +161,12 @@ void loop() {
 
         // start sunrise
 
-        SunRise(deviceParam.val);
+        SunRise(127, 1, false);
 
       }
+      // else {
+      //   SunRise(deviceParam.val, 1, true);
+      // }
 
       break;
     }
@@ -172,7 +182,7 @@ void loop() {
   else if (deviceParam.state == APICLG::StateType::lowBattery){
     if (lowBattRepeat > 0){ 
       lowBattRepeat--;
-      SmoothBlink(0, 255, 10 + lowBattRepeat * 25, 15, 35);
+      SmoothBlink(0, 255, 10 + lowBattRepeat * 25, 10 + lowBattRepeat * 25, 15, 35);
     }
     // SmoothBlink(deviceParam.hue, deviceParam.sat, deviceParam.val, deviceParam.speed, deviceParam.scale);
   }
@@ -234,55 +244,68 @@ void FillLEDsFromPaletteColors(const APICLG::DeviceParameters &devPar)
 }
 
 /// @brief Smooth flashing of all LEDs
-/// @note Зависимость периода от скорости и плавности T = 1/(V+Sm) - обратно пропорциональная
-/// на больших значениях T имеет смысл уменьшить Sm до 15, менять только V. На маленьких
-/// значениях T имеет смысл увеличить Sm  15     
-void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t valMax, const uint8_t speed, const uint8_t smooth)
+/// @note Зависимость периода от скорости и плавности T = (Sm+V) * Const 
+/// @param samplingPeriod period of the sampling in milliseconds
+/// @param mode 0 - cyclic blinking, 1 - increasing the brightness, 2 - lowering the brightness  
+void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const uint8_t valMax, const uint16_t samplingPeriod, const uint8_t smooth, uint8_t mode)
 {
-  static bool direction = true;             // true - up, false - down
-  static float valCounter = deviceParam.val; // start brightness
+  // init variables
+  static bool direction = true;              // true - up, false - down
+  static float valCounter = val; // start brightness;
   static uint64_t startTimer = millis();
-
-  float step = (float)valMax/smooth; // step size
-
   
+  if (mode == 1 && direction != true){
+    direction = true;
+    valCounter = 0;
+  }
+  else if (mode == 2 && direction != false){
+    direction = false;
+    valCounter = 0;
+  }
+ 
 
-  if (millis() - startTimer > 1000/speed){
+  if (millis() - startTimer > samplingPeriod){  // delay to update the brightness
     startTimer = millis();
+    
+    float step = (float)valMax/smooth; // step size
 
     // convert HSV to RGB
     uint8_t hue2 = map8(hue, 0, 191); // for the correct conversion of HSV to RGB, above 191 does not make sense
     CHSV hsv(hue2, sat, 0);
     CRGB rgb;
+
+  
+    
   
     if (direction){
-      // to do up   
+      // increasing the brightness
       hsv.v = valCounter;
-      // FastLED.delay(1000/speed);
     }
     else {
-      // to do down
+      // decreasing the brightness
       hsv.v = valMax - valCounter;
-      // FastLED.delay(1000/speed);
     }
 
     
 
-    DEBUGMLN("direction: " + String(direction));
-    DEBUGMLN("valCounter: " + String(valCounter));
-    DEBUGMLN("step: " + String(step));
+    // DEBUGMLN("direction: " + String(direction));
+    // DEBUGMLN("valCounter: " + String(valCounter));
+    // DEBUGMLN("step: " + String(step));
 
 
-
+    // display the color
     hsv2rgb_raw(hsv, rgb);
     fill_solid(leds, NUM_LEDS, rgb);
     FastLED.show();
+    // deviceParam.val = hsv.v;
 
-  
-    valCounter += step;
+    // iterative adder
+    if (mode == 0 || (mode != 0 && valCounter <= valMax))
+      valCounter += step;
 
-    if (valCounter > valMax){
-      direction = !direction; // changing the direction of brightness
+    // changing the direction of brightness
+    if (valCounter > valMax && mode == 0){
+      direction = !direction; 
       valCounter = 0;
     }
 
@@ -296,7 +319,40 @@ void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t valMax, con
  
 }
 
-void SunRise(const uint8_t val)
+void SunRise(const uint8_t valMax, const uint8_t executionTime, const bool reset)
 {
+  if (reset){
+  
+  }
+  uint8_t hueBegin = 25; // 35 / 360.0 * 255
+  uint8_t hueEnd = 59;   // 72 / 360.0 * 255
+  float hueStep = (hueEnd - hueBegin) / (float(executionTime) * 60);
+  static float hueCounter = hueBegin;
+  
+  uint8_t satBegin = 255;
+  uint8_t satEnd = 146;
+  float satStep = (int(satEnd) - satBegin) / (float(executionTime) * 60);
+  static float satCounter = satBegin;
 
+  float valStep = valMax / (float(executionTime) * 60);
+  static float valCounter = 0;
+
+  
+  static uint64_t startTimer = millis();
+  // static uint64_t startSatTimer = startHueTimer;
+
+  if (millis() - startTimer > 1000){  // delay to update the brightness
+    startTimer = millis();
+    if (hueCounter <= hueEnd){
+      hueCounter += hueStep;
+    }
+    if (satEnd <= satCounter){
+      satCounter += satStep;
+    }
+    if (valCounter < valMax){
+      valCounter += valStep;
+    }
+    DEBUGMLN("hueCounter: " + String(hueCounter) + " satCounter: " + String(satCounter) + " valCounter: " + String(valCounter));
+    FillingLEDsSolidColors(hueCounter, satCounter, valCounter);
+  }
 }
