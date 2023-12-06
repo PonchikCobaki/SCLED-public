@@ -2,11 +2,12 @@ role: begin/ middle/ end
 type-gate: strip/ rect/ hex/ triangle/ circle
 offset-voltage: -256 to 255 (+- 250mV at range 0-1V)
 state: off/ run/ pause/ low_battry
-program-type: solid/ gradient/ blink/ wave
+program-type: solid/ blink/ gradient/ sunrise/ wave
 gradient-number: 0-43
-blend-type: noblend/ linearblend/ linearblend-nowarp
+blend-type: linearblend/ linearblend-nowarp/ noblend
 speed: 0-255
-pradient-scale: 0-255
+scale: 0-255
+delaySunrise: 0 - 2^16 in minutes
 hsv: ffffff  color format(hue, saturation, brightness)(255,255,255)
 
 
@@ -17,7 +18,7 @@ Json example {
     "state": "off",
     "program-type": "gradient",
     "gradient-number": 1,
-    "gradient-scale": 1,
+    "scale": 1,
     "blend-type": "noblend",
     "speed": 0,
     "hsv": [
@@ -28,4 +29,4 @@ Json example {
 }
 
 HTTP example
-http://192.168.0.168/api?offset-voltage=1&program-type=gradient&gradient-number=1&blend-type=noblend&hsv=00ffa0&gradient-scale=1&speed=0
+http://192.168.0.168/api?offset-voltage=1&program-type=gradient&gradient-number=1&blend-type=noblend&hsv=00ffa0&scale=1&speed=0

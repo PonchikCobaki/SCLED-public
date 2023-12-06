@@ -19,7 +19,8 @@ void FillingLEDsSolidColors(const uint8_t hue, const uint8_t sat, const uint8_t 
 void FillingLEDsSolidColors(CHSV hsv);
 void FillingLEDsSolidColors(const char *hsvCStr);
 void FillLEDsFromPaletteColors(const APICLG::DeviceParameters &devPar);
-void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const uint8_t speed, const uint8_t smooth);
+void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t valMax, const uint8_t speed, const uint8_t smooth);
+void SunRise(const uint8_t valMax);
 
 void setup() {
   #ifdef DEBUG_SERIAL
@@ -78,7 +79,7 @@ void loop() {
     DEBUGMLN("state: " + String(deviceParam.state)); 
     DEBUGMLN("program-type: " + String(deviceParam.programType));
     DEBUGMLN("gradientNumber: " + String(deviceParam.gradientNumber));
-    DEBUGMLN("gradientScale: " + String(deviceParam.gradientScale));
+    DEBUGMLN("scale: " + String(deviceParam.scale));
     DEBUGMLN("blendType: " + String(deviceParam.blendType));
     DEBUGMLN("speed: " + String(deviceParam.speed));
     DEBUGMLN("hue: " + String(deviceParam.hue));
@@ -121,7 +122,7 @@ void loop() {
       break;
 
     case APICLG::ProgramType::blink:
-      SmoothBlink(deviceParam.hue, deviceParam.sat, deviceParam.val, deviceParam.speed, 35);
+      SmoothBlink(deviceParam.hue, deviceParam.sat, deviceParam.val, deviceParam.speed, deviceParam.scale);
     // to do
       break;
 
@@ -133,6 +134,33 @@ void loop() {
     // to do
       break;
 
+    case APICLG::ProgramType::sunrise:
+    {
+      if (deviceParam.sunriseStarted){
+        uint16_t curTime = minutes16();
+
+        // chek timout
+        if (deviceParam.refPoint < curTime){
+          if (curTime - deviceParam.refPoint < deviceParam.delaySunrise){
+            break;
+          }
+        } 
+        else { //  resetting the clock variable after 51 days of continuous operation of the device
+          if ((65535 - deviceParam.refPoint) + minutes16() < deviceParam.delaySunrise){
+            break;
+          }
+        }
+
+
+        // start sunrise
+
+        SunRise(deviceParam.val);
+
+      }
+
+      break;
+    }
+  
     default:
     // to do
       break;
@@ -146,7 +174,7 @@ void loop() {
       lowBattRepeat--;
       SmoothBlink(0, 255, 10 + lowBattRepeat * 25, 15, 35);
     }
-    // SmoothBlink(deviceParam.hue, deviceParam.sat, deviceParam.val, deviceParam.speed, deviceParam.gradientScale);
+    // SmoothBlink(deviceParam.hue, deviceParam.sat, deviceParam.val, deviceParam.speed, deviceParam.scale);
   }
 
   
@@ -189,54 +217,86 @@ void FillingLEDsSolidColors(const char *hsvCStr){
 
 void FillLEDsFromPaletteColors(const APICLG::DeviceParameters &devPar)
 {
+  // uint8_t scaleReal = map8(devPar.scale, 255, 127);
+  // DEBUGMLN("scaleReal: " + String(scaleReal));
   static uint8_t colorIndex = 0;
   colorIndex += devPar.speed;
   // for (uint16_t i = 0; i < NUM_LEDS; ++i) {
   //   leds[i] = ColorFromPalette(paletteArr[devPar.gradientNumber % 44], colorIndex, devPar.val, TBlendType(devPar.blendType));
-  //   colorIndex += devPar.gradientScale;
+  //   colorIndex += devPar.scale;
     
   // }
-  fill_palette(leds, NUM_LEDS, colorIndex, devPar.gradientScale,
+  fill_palette(leds, NUM_LEDS, colorIndex, devPar.scale,
               paletteArr[devPar.gradientNumber % 44], devPar.val,
               TBlendType(devPar.blendType));
   FastLED.delay(1000/UPDATES_PER_SECOND);
   FastLED.show();
 }
 
-/// @brief Плавное мигание всей лентой 
+/// @brief Smooth flashing of all LEDs
 /// @note Зависимость периода от скорости и плавности T = 1/(V+Sm) - обратно пропорциональная
 /// на больших значениях T имеет смысл уменьшить Sm до 15, менять только V. На маленьких
 /// значениях T имеет смысл увеличить Sm  15     
-void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const uint8_t speed, const uint8_t smooth)
+void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t valMax, const uint8_t speed, const uint8_t smooth)
 {
-  uint8_t hue2 = map8(hue, 0, 191);
-  CHSV hsv(hue2, sat, 0);
-  CRGB rgb;
-  float step = (float)val/smooth;
-  for (float i = 0; (i <= val) & (val - i > step); i+= step){
-    hsv.v = i;
+  static bool direction = true;             // true - up, false - down
+  static float valCounter = deviceParam.val; // start brightness
+  static uint64_t startTimer = millis();
+
+  float step = (float)valMax/smooth; // step size
+
+  
+
+  if (millis() - startTimer > 1000/speed){
+    startTimer = millis();
+
+    // convert HSV to RGB
+    uint8_t hue2 = map8(hue, 0, 191); // for the correct conversion of HSV to RGB, above 191 does not make sense
+    CHSV hsv(hue2, sat, 0);
+    CRGB rgb;
+  
+    if (direction){
+      // to do up   
+      hsv.v = valCounter;
+      // FastLED.delay(1000/speed);
+    }
+    else {
+      // to do down
+      hsv.v = valMax - valCounter;
+      // FastLED.delay(1000/speed);
+    }
+
+    
+
+    DEBUGMLN("direction: " + String(direction));
+    DEBUGMLN("valCounter: " + String(valCounter));
+    DEBUGMLN("step: " + String(step));
+
+
+
     hsv2rgb_raw(hsv, rgb);
     fill_solid(leds, NUM_LEDS, rgb);
     FastLED.show();
-    FastLED.delay(1000/speed);
-    APICLG::serverUpdate();
+
+  
+    valCounter += step;
+
+    if (valCounter > valMax){
+      direction = !direction; // changing the direction of brightness
+      valCounter = 0;
+    }
+
   }
-  yield();
-  for (float i = 0; (i <= val) & (val - i > step); i+= step){
-    hsv.v = val - i;
-    hsv2rgb_raw(hsv, rgb);
-    fill_solid(leds, NUM_LEDS, rgb);
-    FastLED.show();
-    FastLED.delay(1000/speed);
-    APICLG::serverUpdate();
-  }
-  rgb = 0;
-  fill_solid(leds, NUM_LEDS, rgb);
-  FastLED.show();
+  
+  // yield();
+  // rgb = 0;
+  // fill_solid(leds, NUM_LEDS, rgb);
+  // FastLED.show();
 
  
 }
 
+void SunRise(const uint8_t val)
+{
 
-
-
+}

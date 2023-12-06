@@ -55,10 +55,9 @@ String APICLG::pathFinding(const String &req)
   return path;
 }
 
-
-/*  Format example: /api?color=1&intensity=30&role=start
-    return key and value
- */
+///@brief   parse api path in dir strig
+///@note    return error in parse
+///@example Format example: /api?color=1&intensity=30&role=start
 uint8_t APICLG::parsePath(const String &path)
 {
   
@@ -76,17 +75,17 @@ uint8_t APICLG::parsePath(const String &path)
 
       if (endSliceInd != -1)
       {
-        String paramStr = path.substring(startSliceInd + 1, endSliceInd);
+        String paramStr = path.substring(startSliceInd + 1, endSliceInd); // clear the signature /api?
         // DEBUGMLN("param: " + paramStr);
-
-        // parse on name-value
+        
         PathParameters param;
-        if (parseParam(param, paramStr) == 0){ 
-          if(APICLG::updateDeviceParameters(param) == 0){
+
+        if (parseParam(param, paramStr) == 0){            // parse on name-value
+          if(APICLG::updateDeviceParameters(param) == 0){ // save new value in device parameters
             // save to device parameters
             memoryDeviceParam.update();
-          } else  return 1;
-          
+          } 
+          else  return 1;
         }
         else {
           DEBUGMLN("Invalid param in parse path: " + paramStr);
@@ -107,8 +106,8 @@ uint8_t APICLG::parsePath(const String &path)
   return 0;
 }
 
-
-// Format example: color=1
+///@brief   parse query string
+///@example color=1
 uint8_t APICLG::parseParam(APICLG::PathParameters &param, const String &str)
 {
   int delimiter = str.indexOf('=');
