@@ -74,6 +74,13 @@ void ServiceParemeters::changeUName(const QString service, const QString oldName
     insertUName(service, newName);
 }
 
+void ServiceParemeters::deliteService(const QString service)
+{
+    this->devicesMap.remove(service);
+    this->nameMap.remove(service);
+    this->reverseNameMap.remove(reverseNameMap.key(service));
+}
+
 void ServiceParemeters::updateAvailable(const QString service, const bool state)
 {
     availableMap.insert(service, state);

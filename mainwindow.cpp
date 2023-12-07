@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     setEnabledSolidMode();
 
+    // avaibale check timer
     chekAvaibelTimer = new QTimer(this);
     connect(chekAvaibelTimer, &QTimer::timeout, [=](){
         requestParamsFromDevice();
@@ -39,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
                 }
                 QString answer = reply->readAll();
                 if (!answer.isEmpty()){
-                    setEnabledColorControls(true);
+                    ui->modeComboBox->activated(ui->modeComboBox->currentIndex());
                     jsonParse(answer);
                     checkState();
                     updateColorItemUi();
@@ -53,9 +54,7 @@ MainWindow::MainWindow(QWidget *parent)
 //                    ui->plainTextEdit->appendPlainText(getCurrentDeviceAddress());
                     ui->plainTextEdit->appendPlainText(answer);
                 }
-//                else{
-//                    connectionAbsent();
-//                }
+
 
             });
 
@@ -112,6 +111,14 @@ void MainWindow::on_renameService_clicked()
     currentDeviceComboUpdate();
     servicesFile.saveServicesData();
 
+}
+
+void MainWindow::on_deleteService_clicked()
+{
+    QString curName = ui->selectedDeviceComboBox->currentText();
+    servicesData.deliteService(servicesData.getRevUName().value(curName));
+    servicesFile.saveServicesData();
+    currentDeviceComboUpdate();
 }
 
 void MainWindow::on_deviceSearch_clicked()
@@ -355,7 +362,6 @@ void MainWindow::on_sunriseStartButton_clicked()
 
 
 
-
 /*------------------------------PRIVATE FUNC-----------------------------------*/
 
 
@@ -594,22 +600,6 @@ void MainWindow::connectionAbsent()
 QString MainWindow::getCurrentDeviceAddress()
 {
 
-//    if (ui->selectedDeviceComboBox->currentIndex() == -1)
-//    {
-//        qDebug() << "Error missing services";
-//        return "";
-//    }
-
-//    QString curUName = ui->selectedDeviceComboBox->currentText();
-
-//    if (servicesData.getUName().contains(curUName))
-//    {
-//        qDebug() << "Error non-existent device" << curUName;
-//        return "";
-//    }
-
-//  //   TO DO !!! если существует Uname и сервер доступен (были данные на счет его API) то отдаем адрес
-
     QString curService = getCurrentService();
 
     if (servicesData.getServices().contains(curService)){
@@ -621,6 +611,7 @@ QString MainWindow::getCurrentDeviceAddress()
 
     }
 
+    // missing address
     qDebug() << "Error missing address";
     serviceSerachRestart();
     connectionAbsent();
@@ -891,6 +882,4 @@ void MainWindow::setEnabledSunriseControls(bool state)
         ui->sunriseStartButton->setText("Start");
     }
 }
-
-
 

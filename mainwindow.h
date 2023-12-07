@@ -75,11 +75,11 @@ public:
     QDialog               *renameWinwdow = nullptr;
 
 private slots:
-
     void onTimerTimeout();
 
     void on_onButton_clicked(bool checked);
     void on_renameService_clicked();
+    void on_deleteService_clicked();
     void on_deviceSearch_clicked();
     void on_updateParameters_clicked();
 
@@ -108,8 +108,8 @@ private slots:
     void on_sunriseStartButton_clicked();
 
 
-private:
 
+private:
     Ui::MainWindow *ui;
     QJsonDocument jsonDocDeviceParameters;
     QJsonObject jsonDeviceParameters;
