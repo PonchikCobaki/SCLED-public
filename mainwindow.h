@@ -26,6 +26,7 @@
 
 #include <cmath>
 
+#include <QTimer>
 #include <QElapsedTimer>
 
 
@@ -61,6 +62,8 @@ public:
     QElapsedTimer timerUpdate;
     QElapsedTimer timerRequest;
 
+    QTimer *chekAvaibelTimer;
+
 
 //    QMap<QString, QHostAddress> devicesMap; // Service name, device IP
 //    QMap<QString, QString> nameMap; // Service name, User device name
@@ -72,41 +75,38 @@ public:
     QDialog               *renameWinwdow = nullptr;
 
 private slots:
-    void on_colorPushButton_clicked();
 
-    void on_selectedDeviceComboBox_textActivated(const QString &arg1);
+    void onTimerTimeout();
 
+    void on_onButton_clicked(bool checked);
+    void on_renameService_clicked();
     void on_deviceSearch_clicked();
-
     void on_updateParameters_clicked();
 
     void on_jsonSaveButton_clicked();
-
     void on_jsonReadButton_clicked();
-
     void on_fileClearButton_clicked();
+
+    void on_selectedDeviceComboBox_textActivated(const QString &arg1);
+
 
     void on_horizontalSliderHue_valueChanged(int value);
     void on_horizontalSliderSaturation_valueChanged(int value);
     void on_horizontalSliderValue_valueChanged(int value);
 
-    void on_horizontalSliderScale_valueChanged(int value);
-    void on_horizontalSliderSpeed_valueChanged(int value);
-
-
-    void on_onButton_clicked(bool checked);
+    void on_colorPushButton_clicked();
+    void onOnColorChanged(const QColor &color);
 
     void on_modeComboBox_activated(int index);
 
     void on_gradientNameComboBox_activated(int index);
-
-
-
-
-
     void on_blendComboBox_activated(int index);
 
-    void on_renameService_clicked();
+    void on_horizontalSliderScale_valueChanged(int value);
+    void on_horizontalSliderSpeed_valueChanged(int value);
+
+    void on_sunriseStartButton_clicked();
+
 
 private:
 
@@ -115,6 +115,8 @@ private:
     QJsonObject jsonDeviceParameters;
     QJsonArray hsv;
 //    QString state;
+
+
 
     void serviceSerachRestart();
     void serviceResolver(const QMdnsEngine::Service &service);
@@ -126,6 +128,7 @@ private:
     void requestParamsFromDevice();
     void requestParamsFromDevice(const QHostAddress &address);
     void updateParamsOnDevice(QUrlQuery query);
+    void connectionAbsent();
 
     QString getCurrentDeviceAddress();
     QString getCurrentService();
@@ -140,17 +143,25 @@ private:
 
     void checkState();
     void checkProgramMode();
+
     void checkGradientNum();
     void checkBlend();
+    void checkSunrise();
 
     void checkScale();
     void checkSpeed();
 
-    void deactivateColorControls();
-    void setEnabledSolidMode();
-    void setEnabledGradientMode();
 
-    void onOnColorChanged(const QColor &color);
+    void setEnabledColorControls(bool state);
+    void setEnabledSolidMode();
+    void setEnabledBlinkMode();
+    void setEnabledGradientMode();
+    void setEnabledSunriseMode();
+
+    void setEnabledSunriseControls(bool state);
+
+
+
 
 };
 #endif // MAINWINDOW_H
