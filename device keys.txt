@@ -7,7 +7,9 @@ gradient-number: 0-43
 blend-type: linearblend/ linearblend-nowarp/ noblend
 speed: 0-255
 scale: 0-255
-delaySunrise: 0 - 2^16 in minutes
+sunrise-delay: 0 - 2^16 in minutes
+sunrise-state: 0-1
+time-passed: 0 - 2^16 in minutes
 hsv: ffffff  color format(hue, saturation, brightness)(255,255,255)
 
 

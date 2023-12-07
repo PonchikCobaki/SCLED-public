@@ -131,12 +131,15 @@ uint8_t APICLG::updateDeviceParameters(const APICLG::PathParameters &param)
       deviceParam.speed = param.value.toInt();
       return 0;
     }
-    else if (param.name == "delay-sunrise"){
+    else if (param.name == "sunrise-delay"){
       deviceParam.delaySunrise = param.value.toInt();
-
+      return 0;
+    }
+    else if (param.name == "sunrise-state"){
+      deviceParam.sunriseStarted = param.value.toInt();
       // the beginning of the countdown for sunrise
-      deviceParam.refPoint = minutes16();
-      deviceParam.sunriseStarted = true;
+      if (deviceParam.sunriseStarted)
+        deviceParam.refPoint = minutes16();
       return 0;
     }
     
@@ -284,8 +287,10 @@ uint8_t APICLG::createJson(StaticJsonDocument<sizeJson> &jsonDoc)
   }
 
   if (deviceParam.programType == APICLG::ProgramType::sunrise){
-    jsonDoc["delay-sunrise"] = deviceParam.delaySunrise;
-    jsonDoc["time-passed"] = (minutes16() - deviceParam.refPoint);
+    jsonDoc["sunrise-delay"] = deviceParam.delaySunrise;
+    if (deviceParam.sunriseStarted)
+      jsonDoc["time-passed"] = (minutes16() - deviceParam.refPoint);
+    jsonDoc["sunrise-state"] = deviceParam.sunriseStarted;
   }
 
   // color

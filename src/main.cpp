@@ -20,7 +20,7 @@ void FillingLEDsSolidColors(CHSV hsv);
 void FillingLEDsSolidColors(const char *hsvCStr);
 void FillLEDsFromPaletteColors(const APICLG::DeviceParameters &devPar);
 void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const uint8_t valMax, const uint16_t samplingPeriod, const uint8_t smooth, uint8_t mode=0);
-void SunRise(const uint8_t valMax, const uint8_t executionTime, const bool reset);
+void SunRise(const uint8_t valMax, const uint8_t executionTime, uint8_t &start);
 
 void setup() {
   #ifdef DEBUG_SERIAL
@@ -147,26 +147,24 @@ void loop() {
         uint16_t curTime = minutes16();
 
         // chek timout
-        if (deviceParam.refPoint < curTime){
-          if (curTime - deviceParam.refPoint < deviceParam.delaySunrise){
+        if (deviceParam.refPoint <= curTime){
+          if (curTime - deviceParam.refPoint <= deviceParam.delaySunrise){
             break;
           }
         } 
         else { //  resetting the clock variable after 51 days of continuous operation of the device
-          if ((65535 - deviceParam.refPoint) + minutes16() < deviceParam.delaySunrise){
+          if ((65535 - deviceParam.refPoint) + minutes16() <= deviceParam.delaySunrise){
             break;
           }
         }
-
-
+        
         // start sunrise
 
-        SunRise(127, 1, false);
+        SunRise(deviceParam.val, 1, deviceParam.sunriseStarted);
 
+      } else {
+        FillingLEDsSolidColors(0, 0, 0);
       }
-      // else {
-      //   SunRise(deviceParam.val, 1, true);
-      // }
 
       break;
     }
@@ -270,13 +268,10 @@ void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const 
     float step = (float)valMax/smooth; // step size
 
     // convert HSV to RGB
-    uint8_t hue2 = map8(hue, 0, 191); // for the correct conversion of HSV to RGB, above 191 does not make sense
-    CHSV hsv(hue2, sat, 0);
+    // uint8_t hue2 = map8(hue, 0, 191); // for the correct conversion of HSV to RGB, above 191 does not make sense
+    CHSV hsv(hue, sat, 0);
     CRGB rgb;
-
-  
     
-  
     if (direction){
       // increasing the brightness
       hsv.v = valCounter;
@@ -286,15 +281,13 @@ void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const 
       hsv.v = valMax - valCounter;
     }
 
-    
-
     // DEBUGMLN("direction: " + String(direction));
     // DEBUGMLN("valCounter: " + String(valCounter));
     // DEBUGMLN("step: " + String(step));
 
 
     // display the color
-    hsv2rgb_raw(hsv, rgb);
+    hsv2rgb_spectrum(hsv, rgb);
     fill_solid(leds, NUM_LEDS, rgb);
     FastLED.show();
     // deviceParam.val = hsv.v;
@@ -310,27 +303,19 @@ void SmoothBlink(const uint8_t hue, const uint8_t sat, const uint8_t val, const 
     }
 
   }
-  
-  // yield();
-  // rgb = 0;
-  // fill_solid(leds, NUM_LEDS, rgb);
-  // FastLED.show();
-
- 
+   
 }
 
-void SunRise(const uint8_t valMax, const uint8_t executionTime, const bool reset)
+void SunRise(const uint8_t valMax, const uint8_t executionTime, uint8_t &start)
 {
-  if (reset){
   
-  }
-  uint8_t hueBegin = 25; // 35 / 360.0 * 255
-  uint8_t hueEnd = 59;   // 72 / 360.0 * 255
+  constexpr uint8_t hueBegin = 25; // 35 / 360.0 * 255
+  constexpr uint8_t hueEnd = 59;   // 72 / 360.0 * 255
   float hueStep = (hueEnd - hueBegin) / (float(executionTime) * 60);
   static float hueCounter = hueBegin;
   
-  uint8_t satBegin = 255;
-  uint8_t satEnd = 146;
+  constexpr uint8_t satBegin = 255;
+  constexpr uint8_t satEnd = 146;
   float satStep = (int(satEnd) - satBegin) / (float(executionTime) * 60);
   static float satCounter = satBegin;
 
@@ -349,10 +334,17 @@ void SunRise(const uint8_t valMax, const uint8_t executionTime, const bool reset
     if (satEnd <= satCounter){
       satCounter += satStep;
     }
-    if (valCounter < valMax){
+    if (valCounter <= valMax){
       valCounter += valStep;
     }
     DEBUGMLN("hueCounter: " + String(hueCounter) + " satCounter: " + String(satCounter) + " valCounter: " + String(valCounter));
     FillingLEDsSolidColors(hueCounter, satCounter, valCounter);
+
+    if((hueCounter > hueEnd) && (satEnd > satCounter) && (valCounter > valMax)){
+      start = false;
+      hueCounter = hueBegin;
+      satCounter = satBegin;
+      valCounter = 0;
+    }
   }
 }
