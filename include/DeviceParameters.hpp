@@ -6,7 +6,7 @@
 #include <ArduinoJson.h>
 
 #include "settings.hpp"
-#include "Path_parameters.hpp"
+#include "PathParameters.hpp"
 
 
 namespace APICLG {
