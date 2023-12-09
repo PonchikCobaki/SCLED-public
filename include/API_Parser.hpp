@@ -1,7 +1,7 @@
 #pragma once
 #include <Stream.h>
 #include "settings.hpp"
-#include "Path_parameters.hpp"
+#include "PathParameters.hpp"
 #include "DeviceParameters.hpp"
 
 
