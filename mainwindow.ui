@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>516</width>
-    <height>539</height>
+    <height>517</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -603,7 +603,7 @@ border-radius: 10px;</string>
           <property name="minimumSize">
            <size>
             <width>250</width>
-            <height>0</height>
+            <height>155</height>
            </size>
           </property>
           <property name="maximumSize">
@@ -811,7 +811,7 @@ border-radius: 10px;</string>
           <property name="minimumSize">
            <size>
             <width>250</width>
-            <height>0</height>
+            <height>70</height>
            </size>
           </property>
           <property name="maximumSize">
@@ -862,7 +862,7 @@ border-radius: 10px;</string>
           <property name="maximumSize">
            <size>
             <width>250</width>
-            <height>16777215</height>
+            <height>200</height>
            </size>
           </property>
           <property name="title">

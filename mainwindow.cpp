@@ -19,10 +19,6 @@ MainWindow::MainWindow(QWidget *parent)
     currentDeviceComboUpdate();
 
 
-//    serviceSerachRestart();
-
-//    setEnabledSolidMode();
-
     // avaibale check timer
     chekAvaibelTimer = new QTimer(this);
     connect(chekAvaibelTimer, &QTimer::timeout, [=](){
