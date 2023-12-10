@@ -58,7 +58,7 @@ public:
     ServiceParemeters servicesData;
     DeviceDataFile servicesFile;
 
-    int timeoutRequest = 100;
+    int timeoutRequest = 80;
     QElapsedTimer timerUpdate;
     QElapsedTimer timerRequest;
 
@@ -75,8 +75,6 @@ public:
     QDialog               *renameWinwdow = nullptr;
 
 private slots:
-    void onTimerTimeout();
-
     void on_onButton_clicked(bool checked);
     void on_renameService_clicked();
     void on_deleteService_clicked();
@@ -114,8 +112,6 @@ private:
     QJsonDocument jsonDocDeviceParameters;
     QJsonObject jsonDeviceParameters;
     QJsonArray hsv;
-//    QString state;
-
 
 
     void serviceSerachRestart();
