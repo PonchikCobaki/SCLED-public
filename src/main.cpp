@@ -12,10 +12,7 @@ APICLG::DeviceParameters deviceParam;
 EEManager memoryDeviceParam(deviceParam);
 
 
-
-
 void Error(uint8_t code);
-
 
 
 void setup() {

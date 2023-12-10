@@ -3,3 +3,14 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+deviceAPI2.txt
+backup/include/DeviceParameters.hpp
+backup/include/mDNS_Server.hpp
+backup/include/palettes.hpp
+backup/include/Path_parameters.hpp
+backup/include/README
+backup/include/settings.hpp
+backup/src/API_Parser.cpp
+backup/src/DeviceParameters.cpp
+backup/src/main.cpp
+backup/src/mDNS_Server.cpp
