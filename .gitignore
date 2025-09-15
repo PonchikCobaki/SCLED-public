@@ -14,3 +14,4 @@ backup/src/API_Parser.cpp
 backup/src/DeviceParameters.cpp
 backup/src/main.cpp
 backup/src/mDNS_Server.cpp
+include/settings copy.hpp
