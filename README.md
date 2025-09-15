@@ -8,9 +8,9 @@
 - Не требуется соединение с интернетом и серверами
 - Минималистичный удобный интерфейс
  
-![gui_1](https://github.com/PonchikCobaki/SCLED-public//raw/{release_control}/gui_1.png)
-![gui_2](https://github.com/PonchikCobaki/SCLED-public//raw/{release_control}/gui_2.png)
-![gui_3](https://github.com/PonchikCobaki/SCLED-public//raw/{release_control}/gui_3.png)
+![gui_1](gui_1.png)
+![gui_2](gui_2.png)
+![gui_3](gui_3.png)
 
 
 
